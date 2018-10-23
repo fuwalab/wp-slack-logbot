@@ -32,6 +32,7 @@ class Slack_Logbot {
 	 * Regsiter API routes.
 	 */
 	public function register_api_routes() {
+		// event API request.
 		register_rest_route(
 			'wp-slack-logbot',
 			'/challenge',
@@ -40,12 +41,24 @@ class Slack_Logbot {
 				'callback' => array( $this, 'challenge' ),
 			)
 		);
+
+		// URL configration and verification.
 		register_rest_route(
 			'wp-slack-logbot',
 			'/enable_events',
 			array(
 				'methods'  => 'POST',
 				'callback' => array( $this, 'enable_events' ),
+			)
+		);
+
+		// Show channel list.
+		register_rest_route(
+			'wp-slack-logbot',
+			'/channel_list',
+			array(
+				'methods'  => 'GET',
+				'callback' => array( $this, 'channel_list' ),
 			)
 		);
 	}
@@ -126,5 +139,20 @@ class Slack_Logbot {
 			$table_name,
 			$data
 		);
+	}
+
+	/**
+	 * Show channel list.
+	 */
+	public function channel_list() {
+		global $wpdb;
+		$table_name = $wpdb->prefix . self::TABLE_NAME;
+
+		// Ignore result of phpcs. It says "Use placeholders and $wpdb->prepare(); found $query (WordPress.DB.PreparedSQL.NotPrepared)".
+		// Actually, it doesn't have to use prepare statement.
+		$query = "SELECT MAX(create_date) AS create_date, event_channel FROM $table_name where id > %d GROUP BY event_channel";
+		$rows  = $wpdb->get_results( $wpdb->prepare( $query, 0 ) );
+
+		return $rows;
 	}
 }

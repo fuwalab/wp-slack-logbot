@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name:     Wp Slack Logbot
+ * Plugin Name:     WP Slack Logbot
  * Plugin URI:      PLUGIN SITE HERE
- * Description:     PLUGIN DESCRIPTION HERE
- * Author:          YOUR NAME HERE
- * Author URI:      YOUR SITE HERE
+ * Description:     Stores all messages of particular channels on slack. And able to see them.
+ * Author:          ryotsun
+ * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         0.1.0
+ * Version:         1.0.0
  *
  * @package         Wp_Slack_Logbot
  */
@@ -18,29 +18,50 @@
 require_once 'includes/class-slack-logbot.php';
 require_once 'admin/class-slack-logbot-admin.php';
 
+/**
+ * Class WP_Slack_Logbot
+ */
 class WP_Slack_Logbot {
 	const TABLE_NAME = 'slack_logbot';
+
+	/**
+	 * Logbot version
+	 *
+	 * @var string $slack_logbot_version
+	 */
 	var $slack_logbot_version = '1.0';
+
+	/**
+	 * Admin instance
+	 *
+	 * @var Slack_Logbot_Admin $admin
+	 */
 	var $admin;
 
-	function __construct()
-	{
-		new SlackLogbot();
+	/**
+	 * WP_Slack_Logbot constructor.
+	 */
+	function __construct() {
+		new Slack_Logbot();
 		$this->register_activation_hook();
 
-		// enable admin
-		$this->admin = new SlackLogbotAdmin();
+		// enable admin.
+		$this->admin = new Slack_Logbot_Admin();
 	}
 
-	public function register_activation_hook()
-	{
-		register_activation_hook( __FILE__, array( $this, 'install') );
+	/**
+	 * Register activation hook.
+	 */
+	public function register_activation_hook() {
+		register_activation_hook( __FILE__, array( $this, 'install' ) );
 	}
 
-	public function install()
-	{
+	/**
+	 * Create table for this plugin.
+	 */
+	public function install() {
 		global $wpdb;
-		$table_name = $wpdb->prefix . self::TABLE_NAME;
+		$table_name      = $wpdb->prefix . self::TABLE_NAME;
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE $table_name (

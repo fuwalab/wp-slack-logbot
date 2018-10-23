@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name:     Wp Slack Logbot
+ * Plugin Name:     WP Slack Logbot
  * Plugin URI:      PLUGIN SITE HERE
- * Description:     PLUGIN DESCRIPTION HERE
- * Author:          YOUR NAME HERE
- * Author URI:      YOUR SITE HERE
+ * Description:     Stores all messages of particular channels on slack. And able to see them.
+ * Author:          ryotsun
+ * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         0.1.0
+ * Version:         1.0.0
  *
  * @package         Wp_Slack_Logbot
  */

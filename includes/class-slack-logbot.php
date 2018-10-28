@@ -125,6 +125,7 @@ class Slack_Logbot {
 		$terms              = get_terms( 'category', $args );
 		$parent_category_id = 0;
 		$category_id        = 0;
+		// FIXME: プライベートチャンネルやDMのときは別のAPIになる
 		$channel_name       = $this->get_slack_channel_name( $data['event_channel'] );
 
 		foreach ( $terms as $term ) {
@@ -249,7 +250,7 @@ class Slack_Logbot {
 	 * @return mixed channel name.
 	 */
 	private function get_slack_channel_name( $channel_id ) {
-		$channel_name = $channel_id;
+		$channel_name = '';
 		$params       = array(
 			'headers' => array(
 				'content-type' => 'application/x-www-form-urlencoded',
@@ -268,7 +269,7 @@ class Slack_Logbot {
 			}
 		}
 
-		return $channel_name;
+		return '' != $channel_name ? $channel_name : $channel_id;
 	}
 
 	/**

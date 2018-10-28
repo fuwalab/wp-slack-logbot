@@ -26,6 +26,8 @@ class WP_Slack_Logbot {
 	const TABLE_NAME = 'slack_logbot';
 
 	/**
+	 * Plugin name.
+	 *
 	 * @var string $plugin_name plugin name.
 	 */
 	public static $plugin_name = 'WP Slack Logbot';

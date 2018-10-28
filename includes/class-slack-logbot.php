@@ -24,6 +24,8 @@ class Slack_Logbot {
 	var $slack_logbot_version = '1.0';
 
 	/**
+	 * Slack team info.
+	 *
 	 * @var $team_id Slack_Logbot Slack team info object.
 	 */
 	public static $team_info;
@@ -113,7 +115,7 @@ class Slack_Logbot {
 	/**
 	 * Update or Insert log data into wp_posts.
 	 *
-	 * @param $data array slack log data.
+	 * @param array $data slack log data.
 	 */
 	private function upsert_post( $data ) {
 		global $wpdb;
@@ -141,18 +143,18 @@ class Slack_Logbot {
 		);
 
 		$category = array(
-			'cat_ID'   => $category_id,
-			'cat_name' => $channel_name,
-			'taxonomy' => 'category',
+			'cat_ID'          => $category_id,
+			'cat_name'        => $channel_name,
+			'taxonomy'        => 'category',
 			'category_parent' => $parent_category_id,
 		);
 
-		if ( file_exists ( ABSPATH . '/wp-admin/includes/taxonomy.php' ) ) {
-			require_once ( ABSPATH . '/wp-admin/includes/taxonomy.php' );
+		if ( file_exists( ABSPATH . '/wp-admin/includes/taxonomy.php' ) ) {
+			require_once( ABSPATH . '/wp-admin/includes/taxonomy.php' );
 		}
 
 		$parent_category_id = wp_insert_category( $parent_category );
-		$category_id = wp_insert_category( $category );
+		$category_id        = wp_insert_category( $category );
 
 		$user_name    = $this->get_slack_user_name( $data['event_user'] );
 		$table_name   = $wpdb->prefix . 'posts';
@@ -164,7 +166,6 @@ class Slack_Logbot {
 
 		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID DESC LIMIT 1";
 		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
-		var_dump($result);
 
 		if ( count( $result ) > 0 ) {
 			$post_id      = $result[0]['ID'];
@@ -180,18 +181,18 @@ class Slack_Logbot {
 		$post_content .= '@' . $user_name . '</li></ul>';
 
 		$post = array(
-			'ID'           => $post_id,
-			'post_title'   => $post_title,
-			'post_content' => $post_content,
-			'post_status'  => 'publish',
-			'post_author'  => $wp_user_id,
-			'meta_input'   => array(
+			'ID'            => $post_id,
+			'post_title'    => $post_title,
+			'post_content'  => $post_content,
+			'post_status'   => 'publish',
+			'post_author'   => $wp_user_id,
+			'meta_input'    => array(
 				'test_meta_key' => 'value of test_meta_key',
 			),
 			'post_category' => array( $parent_category_id, $category_id ),
 		);
 
-		remove_action('post_updated', 'wp_save_post_revision');
+		remove_action( 'post_updated', 'wp_save_post_revision' );
 		$post_id > 0 ? wp_update_post( $post ) : wp_insert_post( $post );
 	}
 
@@ -232,7 +233,7 @@ class Slack_Logbot {
 
 		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
 			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_TEAM_INFO . '?token=' . $slack_access_token;
-			$response = wp_remote_get($request_url, $params);
+			$response    = wp_remote_get( $request_url, $params );
 
 			if ( 200 == $response['response']['code'] ) {
 				$team_info_body  = json_decode( $response['body'], true );
@@ -244,12 +245,12 @@ class Slack_Logbot {
 	/**
 	 * Get slack channel name from channelID.
 	 *
-	 * @param $channel_id string slack channel ID.
+	 * @param string $channel_id slack channel ID.
 	 * @return mixed channel name.
 	 */
 	private function get_slack_channel_name( $channel_id ) {
 		$channel_name = $channel_id;
-		$params = array(
+		$params       = array(
 			'headers' => array(
 				'content-type' => 'application/x-www-form-urlencoded',
 			),
@@ -259,11 +260,11 @@ class Slack_Logbot {
 
 		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
 			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_CHANNEL_INFO . '?token=' . $slack_access_token . '&channel=' . $channel_id;
-			$response = wp_remote_get($request_url, $params);
+			$response    = wp_remote_get( $request_url, $params );
 
 			if ( 200 == $response['response']['code'] ) {
-				$channel_info_body  = json_decode( $response['body'], true );
-				$channel_name = $channel_info_body['channel']['name'];
+				$channel_info_body = json_decode( $response['body'], true );
+				$channel_name      = $channel_info_body['channel']['name'];
 			}
 		}
 
@@ -273,12 +274,12 @@ class Slack_Logbot {
 	/**
 	 * Get slack user name from userID.
 	 *
-	 * @param $user_id string slack user ID.
+	 * @param string $user_id Slack user ID.
 	 * @return mixed user name.
 	 */
 	private function get_slack_user_name( $user_id ) {
 		$user_name = $user_id;
-		$params = array(
+		$params    = array(
 			'headers' => array(
 				'content-type' => 'application/x-www-form-urlencoded',
 			),
@@ -288,11 +289,11 @@ class Slack_Logbot {
 
 		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
 			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_USER_INFO . '?token=' . $slack_access_token . '&user=' . $user_id;
-			$response = wp_remote_get($request_url, $params);
+			$response    = wp_remote_get( $request_url, $params );
 
 			if ( 200 == $response['response']['code'] ) {
-				$user_info_body  = json_decode( $response['body'], true );
-				$user_name = $user_info_body['user']['profile']['display_name'];
+				$user_info_body = json_decode( $response['body'], true );
+				$user_name      = $user_info_body['user']['profile']['display_name'];
 			}
 		}
 

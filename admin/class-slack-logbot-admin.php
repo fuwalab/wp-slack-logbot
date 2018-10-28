@@ -15,6 +15,8 @@ namespace wp_slack_logbot;
  */
 class Slack_Logbot_Admin {
 	/**
+	 * Slack Bot access token.
+	 *
 	 * @var $slack_access_token Slack_Logbot_Admin Slack access token.
 	 */
 	public $slack_access_token;
@@ -63,7 +65,7 @@ class Slack_Logbot_Admin {
 		$error_message = '';
 
 		$plugin_name = WP_Slack_Logbot::$plugin_name;
-		if ( !isset( $this->slack_access_token ) || '' == $this->slack_access_token ) {
+		if ( ! isset( $this->slack_access_token ) || '' == $this->slack_access_token ) {
 			$error_message .= "<div class=\"message error\"><h2>$plugin_name</h2><p>Please set Access Token of your Slack bot.</p></div>";
 		}
 

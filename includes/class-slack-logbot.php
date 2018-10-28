@@ -238,7 +238,9 @@ class Slack_Logbot {
 
 			if ( 200 == $response['response']['code'] ) {
 				$team_info_body  = json_decode( $response['body'], true );
-				self::$team_info = $team_info_body['team'];
+				if ( isset( $team_info_body['team'] ) ) {
+					self::$team_info = $team_info_body['team'];
+				}
 			}
 		}
 	}

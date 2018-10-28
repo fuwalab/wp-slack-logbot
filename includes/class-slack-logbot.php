@@ -8,6 +8,8 @@
  * @version 1.0.0
  */
 
+namespace wp_slack_logbot;
+
 /**
  * Class Slack_Logbot
  */
@@ -22,10 +24,36 @@ class Slack_Logbot {
 	var $slack_logbot_version = '1.0';
 
 	/**
+	 * @var $team_id Slack_Logbot Slack team info object.
+	 */
+	public static $team_info;
+
+	/**
+	 * Base URL of slack API.
+	 */
+	const SLACK_API_BASE_URL = 'https://slack.com/api/';
+
+	/**
+	 * Path to team info.
+	 */
+	const SLACK_API_PATH_TEAM_INFO = 'team.info';
+
+	/**
+	 * Path to channel info.
+	 */
+	const SLACK_API_PATH_CHANNEL_INFO = 'channels.info';
+
+	/**
+	 * Path to user info.
+	 */
+	const SLACK_API_PATH_USER_INFO = 'users.info';
+
+	/**
 	 * Slack_Logbot constructor.
 	 */
 	function __construct() {
 		add_action( 'rest_api_init', array( $this, 'register_api_routes' ) );
+		self::set_slack_team_info();
 	}
 
 	/**
@@ -73,8 +101,98 @@ class Slack_Logbot {
 		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
 			$request = json_decode( file_get_contents( 'php://input' ), true );
 			$data    = $this->prepare_data( $request );
+			// Save slack log to log table.
 			$this->save( $data );
+
+			// Save slack log to wp_post table.
+			$this->upsert_post( $data );
 		}
+		return array();
+	}
+
+	/**
+	 * Update or Insert log data into wp_posts.
+	 *
+	 * @param $data array slack log data.
+	 */
+	private function upsert_post( $data ) {
+		global $wpdb;
+		$team = self::$team_info;
+
+		$args               = array( 'hide_empty' => 0 );
+		$terms              = get_terms( 'category', $args );
+		$parent_category_id = 0;
+		$category_id        = 0;
+		$channel_name       = $this->get_slack_channel_name( $data['event_channel'] );
+
+		foreach ( $terms as $term ) {
+			if ( $team['name'] == $term->slug ) {
+				$parent_category_id = $term->term_id;
+			}
+			if ( $channel_name == $term->slug ) {
+				$category_id = $term->term_id;
+			}
+		}
+
+		$parent_category = array(
+			'cat_ID'   => $parent_category_id,
+			'cat_name' => $team['name'],
+			'taxonomy' => 'category',
+		);
+
+		$category = array(
+			'cat_ID'   => $category_id,
+			'cat_name' => $channel_name,
+			'taxonomy' => 'category',
+			'category_parent' => $parent_category_id,
+		);
+
+		if ( file_exists ( ABSPATH . '/wp-admin/includes/taxonomy.php' ) ) {
+			require_once ( ABSPATH . '/wp-admin/includes/taxonomy.php' );
+		}
+
+		$parent_category_id = wp_insert_category( $parent_category );
+		$category_id = wp_insert_category( $category );
+
+		$user_name    = $this->get_slack_user_name( $data['event_user'] );
+		$table_name   = $wpdb->prefix . 'posts';
+		$wp_user_id   = get_current_user_id() > 0 ? get_current_user() : 1;
+		$post_id      = 0;
+		$post_title   = '[Slack Log] ' . $channel_name . '( ' . date_i18n( 'Y-m-d', $data['event_time'], false ) . ' )';
+		$post_content = '<h2>' . $channel_name . '</h2>';
+		$current_date = date_i18n( 'Y-m-d' );
+
+		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID DESC LIMIT 1";
+		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
+		var_dump($result);
+
+		if ( count( $result ) > 0 ) {
+			$post_id      = $result[0]['ID'];
+			$post_content = $result[0]['post_content'];
+			$post_content = str_replace( '</ul>', '', $post_content );
+		} else {
+			$post_content .= '<ul>';
+		}
+
+		$post_content .= '<li>';
+		$post_content .= $data['event_datetime'] . ' ';
+		$post_content .= $data['event_text'] . ' ';
+		$post_content .= '@' . $user_name . '</li></ul>';
+
+		$post = array(
+			'ID'           => $post_id,
+			'post_title'   => $post_title,
+			'post_content' => $post_content,
+			'post_status'  => 'publish',
+			'post_author'  => $wp_user_id,
+			'meta_input'   => array(
+				'test_meta_key' => 'value of test_meta_key',
+			),
+			'post_category' => array( $parent_category_id, $category_id ),
+		);
+
+		remove_action('post_updated', 'wp_save_post_revision');
+		$post_id > 0 ? wp_update_post( $post ) : wp_insert_post( $post );
 	}
 
 	/**
@@ -101,6 +219,87 @@ class Slack_Logbot {
 	}
 
 	/**
+	 * Set slack team info via slack api.
+	 */
+	public static function set_slack_team_info() {
+		$params = array(
+			'headers' => array(
+				'content-type' => 'application/x-www-form-urlencoded',
+			),
+		);
+
+		$slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
+
+		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
+			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_TEAM_INFO . '?token=' . $slack_access_token;
+			$response = wp_remote_get($request_url, $params);
+
+			if ( 200 == $response['response']['code'] ) {
+				$team_info_body  = json_decode( $response['body'], true );
+				self::$team_info = $team_info_body['team'];
+			}
+		}
+	}
+
+	/**
+	 * Get slack channel name from channelID.
+	 *
+	 * @param $channel_id string slack channel ID.
+	 * @return mixed channel name.
+	 */
+	private function get_slack_channel_name( $channel_id ) {
+		$channel_name = $channel_id;
+		$params = array(
+			'headers' => array(
+				'content-type' => 'application/x-www-form-urlencoded',
+			),
+		);
+
+		$slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
+
+		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
+			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_CHANNEL_INFO . '?token=' . $slack_access_token . '&channel=' . $channel_id;
+			$response = wp_remote_get($request_url, $params);
+
+			if ( 200 == $response['response']['code'] ) {
+				$channel_info_body  = json_decode( $response['body'], true );
+				$channel_name = $channel_info_body['channel']['name'];
+			}
+		}
+
+		return $channel_name;
+	}
+
+	/**
+	 * Get slack user name from userID.
+	 *
+	 * @param $user_id string slack user ID.
+	 * @return mixed user name.
+	 */
+	private function get_slack_user_name( $user_id ) {
+		$user_name = $user_id;
+		$params = array(
+			'headers' => array(
+				'content-type' => 'application/x-www-form-urlencoded',
+			),
+		);
+
+		$slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
+
+		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
+			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_USER_INFO . '?token=' . $slack_access_token . '&user=' . $user_id;
+			$response = wp_remote_get($request_url, $params);
+
+			if ( 200 == $response['response']['code'] ) {
+				$user_info_body  = json_decode( $response['body'], true );
+				$user_name = $user_info_body['user']['profile']['display_name'];
+			}
+		}
+
+		return $user_name;
+	}
+
+	/**
 	 * Prepare data will be saved.
 	 *
 	 * @param array $data Post data.
@@ -120,7 +319,7 @@ class Slack_Logbot {
 			'event_channel_type'  => $data['event']['channel_type'],
 			'event_time'          => $data['event_time'],
 			'event_datetime'      => date( 'Y-m-d H:i:s', $data['event_time'] ),
-			'create_date'         => date( 'Y-m-d' ),
+			'create_date'         => date( 'Y-m-d', $data['event_time'] ),
 		);
 
 		return $values;
@@ -145,14 +344,6 @@ class Slack_Logbot {
 	 * Show channel list.
 	 */
 	public function channel_list() {
-		global $wpdb;
-		$table_name = $wpdb->prefix . self::TABLE_NAME;
-
-		// Ignore result of phpcs. It says "Use placeholders and $wpdb->prepare(); found $query (WordPress.DB.PreparedSQL.NotPrepared)".
-		// Actually, it doesn't have to use prepare statement.
-		$query = "SELECT MAX(create_date) AS create_date, event_channel FROM $table_name where id > %d GROUP BY event_channel";
-		$rows  = $wpdb->get_results( $wpdb->prepare( $query, 0 ) );
-
-		return $rows;
+		return array();
 	}
 }

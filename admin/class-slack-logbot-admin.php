@@ -12,6 +12,8 @@ namespace wp_slack_logbot;
 
 /**
  * Class Slack_Logbot_Admin
+ *
+ * @package wp_slack_logbot
  */
 class Slack_Logbot_Admin {
 	/**
@@ -26,11 +28,10 @@ class Slack_Logbot_Admin {
 	 */
 	function __construct() {
 		add_action( 'admin_menu', array( $this, 'create_admin_menu' ) );
+		add_action( 'admin_notices', array( $this, 'show_error_message' ) );
 
 		// Set access token.
 		$this->set_slack_token();
-
-		add_action( 'admin_notices', array( $this, 'show_error_message' ) );
 	}
 
 	/**
@@ -45,10 +46,10 @@ class Slack_Logbot_Admin {
 	 * Register settings.
 	 */
 	public function register_settings() {
-		// set slack team info.
-		Slack_Logbot::set_slack_team_info();
-
 		register_setting( 'wp-slack-logbot-settings-group', 'wp-slack-logbot-bot-user-oauth-access-token' );
+
+		// set slack team info.
+		Slack_API::set_slack_team_info();
 	}
 
 	/**
@@ -64,12 +65,22 @@ class Slack_Logbot_Admin {
 	public function show_error_message() {
 		$error_message = '';
 
-		$plugin_name = WP_Slack_Logbot::$plugin_name;
+		$slack_api = new Slack_API();
+		$error     = $slack_api->auth_test();
+
 		if ( ! isset( $this->slack_access_token ) || '' == $this->slack_access_token ) {
-			$error_message .= "<div class=\"message error\"><h2>$plugin_name</h2><p>Please set Access Token of your Slack bot.</p></div>";
+			$error_message .= 'Please set Access Token of your Slack bot.';
+		} elseif ( isset( $error['error'] ) ) {
+			$error_message .= $error['error'];
+		}
+		$error_message_html = '';
+		$plugin_name        = WP_Slack_Logbot::$plugin_name;
+
+		if ( '' != $error_message ) {
+			$error_message_html .= "<div class=\"message error\"><h2>$plugin_name</h2><p>$error_message</p></div>";
 		}
 
-		echo $error_message;
+		echo $error_message_html;
 	}
 
 	/**
@@ -78,7 +89,8 @@ class Slack_Logbot_Admin {
 	public function show_page() {
 		?>
 		<div class="wrap">
-			<h2>WP Slack Logbot</h2>
+			<h2><?php echo WP_Slack_Logbot::$plugin_name; ?></h2>
+			<?php settings_errors(); ?>
 			<form method="post" action="options.php">
 				<table class="form-table">
 					<tr valign="top">

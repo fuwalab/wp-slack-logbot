@@ -13,14 +13,18 @@
  */
 
 namespace wp_slack_logbot;
+
 /**
  * Require file
  */
 require_once 'includes/class-slack-logbot.php';
+require_once 'includes/class-slack-api.php';
 require_once 'admin/class-slack-logbot-admin.php';
 
 /**
  * Class WP_Slack_Logbot
+ *
+ * @package wp_slack_logbot
  */
 class WP_Slack_Logbot {
 	const TABLE_NAME = 'slack_logbot';
@@ -100,4 +104,4 @@ class WP_Slack_Logbot {
 	}
 }
 
-$wp_slack_logbot = new WP_Slack_Logbot();
+new WP_Slack_Logbot();

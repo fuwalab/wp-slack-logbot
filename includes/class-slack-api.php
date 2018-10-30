@@ -99,10 +99,6 @@ class Slack_API {
 			if ( empty( $path ) ) {
 				throw new Slack_Logbot_Exception( __( 'API path should not be null.' ), 500 );
 			}
-			if ( empty( self::$access_token ) ) {
-				throw new Slack_Logbot_Exception( __( 'Access token should not be null.' ), 500 );
-			}
-
 			switch ( $path ) {
 				case self::SLACK_API_PATH_AUTH_TEST:
 					$response = self::auth_test( $wp_params );

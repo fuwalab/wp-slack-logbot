@@ -1,6 +1,6 @@
 <?php
 /**
- * Slack_Api class
+ * Slack_Logbot_Exception class
  *
  * @package WordPress
  * @subpackage WP Slack Logbot

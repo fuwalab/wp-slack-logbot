@@ -89,6 +89,7 @@ class Slack_Logbot {
 	/**
 	 * Update or Insert log data into wp_posts.
 	 *
+	 * @throws Slack_Logbot_Exception If provided unexpected response from slack api.
 	 * @param array $data slack log data.
 	 */
 	private function upsert_post( $data ) {

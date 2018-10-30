@@ -113,6 +113,7 @@ class Slack_API {
 	 * Get slack channel name from channelID.
 	 *
 	 * @param string $channel_id slack channel ID.
+	 * @throws Slack_Logbot_Exception If provided missing channel name from slack api response.
 	 * @return mixed channel name.
 	 */
 	public function get_slack_channel_name( $channel_id ) {
@@ -125,29 +126,37 @@ class Slack_API {
 
 		$slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
 
-		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
-			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_CHANNEL_INFO . '?token=' . $slack_access_token . '&channel=' . $channel_id;
-			$response    = wp_remote_get( $request_url, $params );
+		try {
+			if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
+				$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_CHANNEL_INFO . '?token=' . $slack_access_token . '&channel=' . $channel_id;
+				$response    = wp_remote_get( $request_url, $params );
 
-			if ( 200 == $response['response']['code'] ) {
-				$channel_info_body = json_decode( $response['body'], true );
-				if ( ! isset( $channel_info_body['error'] ) ) {
-					$channel_name = $channel_info_body['channel']['name'];
+				if ( 200 == $response['response']['code'] ) {
+					$channel_info_body = json_decode( $response['body'], true );
+					if ( ! isset( $channel_info_body['error'] ) ) {
+						$channel_name = $channel_info_body['channel']['name'];
+					}
 				}
 			}
+			if ( '' == $channel_name ) {
+				throw new Slack_Logbot_Exception( __( 'Failed to fetching channel name via Slack API.' ), 500 );
+			}
+		} catch ( Slack_Logbot_Exception $e ) {
+			die( $e->getMessage() . '(' . $e->getCode() . ')' );
 		}
 
-		return '' != $channel_name ? $channel_name : $channel_id;
+		return $channel_name;
 	}
 
 	/**
 	 * Get slack user name from userID.
 	 *
 	 * @param string $user_id Slack user ID.
+	 * @throws Slack_Logbot_Exception If provided missing user name from slack api response.
 	 * @return mixed user name.
 	 */
 	public function get_slack_user_name( $user_id ) {
-		$user_name = $user_id;
+		$user_name = '';
 		$params    = array(
 			'headers' => array(
 				'content-type' => 'application/x-www-form-urlencoded',
@@ -156,16 +165,23 @@ class Slack_API {
 
 		$slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
 
-		if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
-			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_USER_INFO . '?token=' . $slack_access_token . '&user=' . $user_id;
-			$response    = wp_remote_get( $request_url, $params );
+		try {
+			if ( isset( $slack_access_token ) || '' != $slack_access_token ) {
+				$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_USER_INFO . '?token=' . $slack_access_token . '&user=' . $user_id;
+				$response    = wp_remote_get( $request_url, $params );
 
-			if ( 200 == $response['response']['code'] ) {
-				$user_info_body = json_decode( $response['body'], true );
-				if ( ! isset( $user_info_body['error'] ) ) {
-					$user_name = $user_info_body['user']['profile']['display_name'];
+				if ( 200 == $response['response']['code'] ) {
+					$user_info_body = json_decode( $response['body'], true );
+					if ( ! isset( $user_info_body['error'] ) ) {
+						$user_name = $user_info_body['user']['profile']['display_name'];
+					}
 				}
 			}
+			if ( '' == $user_name ) {
+				throw new Slack_Logbot_Exception( __( 'Failed to fetching user name via Slack API.' ), 500 );
+			}
+		} catch ( Slack_Logbot_Exception $e ) {
+			die( $e->getMessage() . '(' . $e->getCode() . ')' );
 		}
 
 		return $user_name;

@@ -19,6 +19,7 @@ namespace wp_slack_logbot;
  */
 require_once 'includes/class-slack-logbot.php';
 require_once 'includes/class-slack-api.php';
+require_once 'includes/class-slack-logbot-exception.php';
 require_once 'admin/class-slack-logbot-admin.php';
 
 /**

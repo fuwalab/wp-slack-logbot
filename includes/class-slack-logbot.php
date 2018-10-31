@@ -100,9 +100,7 @@ class Slack_Logbot {
 		$terms              = get_terms( 'category', $args );
 		$parent_category_id = 0;
 		$category_id        = 0;
-
-		// TODO: プライベートチャンネルやDMのときは別のAPIになる.
-		$channel_name = $slack_api->get_slack_channel_name( $data['event_channel'] );
+		$channel_name       = $slack_api::request( $slack_api::SLACK_API_PATH_CHANNEL_INFO, array( 'channel_id' => $data['event_channel'] ) );
 
 		foreach ( $terms as $term ) {
 			if ( $team['name'] == $term->slug ) {
@@ -133,7 +131,7 @@ class Slack_Logbot {
 		$parent_category_id = wp_insert_category( $parent_category );
 		$category_id        = wp_insert_category( $category );
 
-		$user_name    = $slack_api->get_slack_user_name( $data['event_user'] );
+		$user_name    = $slack_api::request( $slack_api::SLACK_API_PATH_USER_INFO, array( 'user_id' => $data['event_user'] ) );
 		$table_name   = $wpdb->prefix . 'posts';
 		$wp_user_id   = get_current_user_id() > 0 ? get_current_user() : 1;
 		$post_id      = 0;

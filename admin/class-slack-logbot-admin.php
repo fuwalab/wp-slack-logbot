@@ -49,7 +49,7 @@ class Slack_Logbot_Admin {
 		register_setting( 'wp-slack-logbot-settings-group', 'wp-slack-logbot-bot-user-oauth-access-token' );
 
 		// set slack team info.
-		Slack_API::set_slack_team_info();
+		Slack_API::request( Slack_API::SLACK_API_PATH_TEAM_INFO );
 	}
 
 	/**
@@ -57,6 +57,7 @@ class Slack_Logbot_Admin {
 	 */
 	public function set_slack_token() {
 		$this->slack_access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
+		new Slack_API( $this->slack_access_token );
 	}
 
 	/**
@@ -65,11 +66,10 @@ class Slack_Logbot_Admin {
 	public function show_error_message() {
 		$error_message = '';
 
-		$slack_api = new Slack_API();
-		$error     = $slack_api->auth_test();
+		$error = Slack_API::request( Slack_API::SLACK_API_PATH_AUTH_TEST );
 
 		if ( ! isset( $this->slack_access_token ) || '' == $this->slack_access_token ) {
-			$error_message .= 'Please set Access Token of your Slack bot.';
+			$error_message .= __( 'Please set Access Token of your Slack bot.' );
 		} elseif ( isset( $error['error'] ) ) {
 			$error_message .= $error['error'];
 		}
@@ -77,6 +77,9 @@ class Slack_Logbot_Admin {
 		$plugin_name        = WP_Slack_Logbot::$plugin_name;
 
 		if ( '' != $error_message ) {
+			$link_name           = __( 'Go to plugin setting page.' );
+			$setting_page_path   = 'admin.php?page=' . urlencode_deep( plugin_basename( __FILE__ ) );
+			$error_message      .= "<br><a href=\"$setting_page_path\">$link_name</a>";
 			$error_message_html .= "<div class=\"message error\"><h2>$plugin_name</h2><p>$error_message</p></div>";
 		}
 

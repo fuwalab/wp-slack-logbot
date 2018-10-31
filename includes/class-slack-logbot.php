@@ -135,11 +135,13 @@ class Slack_Logbot {
 		$table_name   = $wpdb->prefix . 'posts';
 		$wp_user_id   = get_current_user_id() > 0 ? get_current_user() : 1;
 		$post_id      = 0;
-		$post_title   = '[Slack Log] ' . $channel_name . '( ' . date_i18n( 'Y-m-d', $data['event_time'], false ) . ' )';
+		$post_title   = '[Slack Log] ' . $channel_name . '( ';
+		$post_title  .= get_date_from_gmt( date( 'Y-m-d H:i:s', $data['event_time'] ), get_option( 'date_format' ) );
+		$post_title  .= ' )';
 		$post_content = '<h2>' . $channel_name . '</h2>';
-		$current_date = date_i18n( 'Y-m-d' );
+		$current_date = get_date_from_gmt( date( 'Y-m-d H:i:s' ), 'Y-m-d' );
 
-		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID DESC LIMIT 1";
+		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1";
 		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
 
 		if ( count( $result ) > 0 ) {
@@ -151,8 +153,8 @@ class Slack_Logbot {
 		}
 
 		$post_content .= '<li>';
-		$post_content .= $data['event_datetime'] . ' ';
-		$post_content .= $data['event_text'] . ' ';
+		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
+		$post_content .= esc_attr( $data['event_text'] ) . ' ';
 		$post_content .= '@' . $user_name . '</li></ul>';
 
 		$post = array(

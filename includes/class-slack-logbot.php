@@ -139,7 +139,7 @@ class Slack_Logbot {
 		$post_content = '<h2>' . $channel_name . '</h2>';
 		$current_date = date_i18n( 'Y-m-d' );
 
-		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID DESC LIMIT 1";
+		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1";
 		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
 
 		if ( count( $result ) > 0 ) {

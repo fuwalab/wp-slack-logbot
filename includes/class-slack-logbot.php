@@ -39,7 +39,7 @@ class Slack_Logbot {
 		$terms              = get_terms( 'category', $args );
 		$parent_category_id = 0;
 		$category_id        = 0;
-		$channel_name       = $slack_api::request( $slack_api::SLACK_API_PATH_CHANNEL_INFO, array( 'channel_id' => $data['event_channel'] ) );
+		$channel_name       = $slack_api::request( $slack_api::SLACK_API_PATH_CONVERSATION_INFO, array( 'channel_id' => $data['event_channel'] ) );
 
 		foreach ( $terms as $term ) {
 			if ( $team['name'] == $term->slug ) {

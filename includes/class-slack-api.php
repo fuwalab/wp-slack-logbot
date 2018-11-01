@@ -26,7 +26,7 @@ class Slack_API {
 	/**
 	 * Slack access token.
 	 *
-	 * @var $access_token Slack_API access token.
+	 * @var string $access_token access token.
 	 */
 	private static $access_token;
 
@@ -43,7 +43,7 @@ class Slack_API {
 	/**
 	 * Path to channel info.
 	 */
-	const SLACK_API_PATH_CHANNEL_INFO = 'channels.info';
+	const SLACK_API_PATH_CONVERSATION_INFO = 'conversations.info';
 
 	/**
 	 * Path to user info.
@@ -100,16 +100,16 @@ class Slack_API {
 			}
 			switch ( $path ) {
 				case self::SLACK_API_PATH_AUTH_TEST:
-					$response = self::auth_test( $wp_params );
+					$response = self::auth_test( $path, $wp_params );
 					break;
-				case self::SLACK_API_PATH_CHANNEL_INFO:
-					$response = self::get_slack_channel_name( $wp_params, $options );
+				case self::SLACK_API_PATH_CONVERSATION_INFO:
+					$response = self::get_slack_channel_name( $path, $wp_params, $options );
 					break;
 				case self::SLACK_API_PATH_TEAM_INFO:
-					self::set_slack_team_info( $wp_params );
+					self::set_slack_team_info( $path, $wp_params );
 					break;
 				case self::SLACK_API_PATH_USER_INFO:
-					$response = self::get_slack_user_name( $wp_params, $options );
+					$response = self::get_slack_user_name( $path, $wp_params, $options );
 					break;
 				default:
 					throw new Slack_Logbot_Exception( __( 'Unknown API path.' ), 500 );
@@ -124,11 +124,12 @@ class Slack_API {
 	/**
 	 * Test if access token is valid.
 	 *
-	 * @param array $wp_params wp_params.
+	 * @param string $path api path.
+	 * @param array  $wp_params wp_params.
 	 * @return array|mixed response from slack test api.
 	 */
-	private static function auth_test( $wp_params ) {
-		$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_AUTH_TEST . '?token=' . self::$access_token;
+	private static function auth_test( $path, $wp_params ) {
+		$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token;
 		$response    = wp_remote_get( $request_url, $wp_params );
 
 		if ( 200 == $response['response']['code'] ) {
@@ -144,10 +145,11 @@ class Slack_API {
 	/**
 	 * Set slack team info via slack api.
 	 *
-	 * @param array $wp_params wp_params.
+	 * @param string $path api path.
+	 * @param array  $wp_params wp_params.
 	 */
-	private static function set_slack_team_info( $wp_params ) {
-		$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_TEAM_INFO . '?token=' . self::$access_token;
+	private static function set_slack_team_info( $path, $wp_params ) {
+		$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token;
 		$response    = wp_remote_get( $request_url, $wp_params );
 
 		if ( 200 == $response['response']['code'] ) {
@@ -161,19 +163,20 @@ class Slack_API {
 	/**
 	 * Get slack channel name from channelID.
 	 *
-	 * @param array $wp_params wp_params.
-	 * @param array $options array of options.
+	 * @param string $path api path.
+	 * @param array  $wp_params wp_params.
+	 * @param array  $options array of options.
 	 * @throws Slack_Logbot_Exception If provided missing channel name from slack api response.
 	 * @return string channel name.
 	 */
-	private static function get_slack_channel_name( $wp_params, $options ) {
+	private static function get_slack_channel_name( $path, $wp_params, $options ) {
 		$channel_name = '';
 
 		try {
 			if ( ! isset( $options['channel_id'] ) ) {
 				throw new Slack_Logbot_Exception( __( 'channel ID should be set.' ), 500 );
 			}
-			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_CHANNEL_INFO . '?token=' . self::$access_token . '&channel=' . $options['channel_id'];
+			$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token . '&channel=' . $options['channel_id'];
 			$response    = wp_remote_get( $request_url, $wp_params );
 
 			if ( 200 == $response['response']['code'] ) {
@@ -195,19 +198,20 @@ class Slack_API {
 	/**
 	 * Get slack user name from userID.
 	 *
-	 * @param array $wp_params wp_params.
-	 * @param array $options options.
+	 * @param string $path api path.
+	 * @param array  $wp_params wp_params.
+	 * @param array  $options options.
 	 * @throws Slack_Logbot_Exception If provided missing user name from slack api response.
 	 * @return string user name.
 	 */
-	private static function get_slack_user_name( $wp_params, $options ) {
+	private static function get_slack_user_name( $path, $wp_params, $options ) {
 		$user_name = '';
 
 		try {
 			if ( ! isset( $options['user_id'] ) ) {
 				throw new Slack_Logbot_Exception( __( 'user ID should be set.' ), 500 );
 			}
-			$request_url = self::SLACK_API_BASE_URL . self::SLACK_API_PATH_USER_INFO . '?token=' . self::$access_token . '&user=' . $options['user_id'];
+			$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token . '&user=' . $options['user_id'];
 			$response    = wp_remote_get( $request_url, $wp_params );
 
 			if ( 200 == $response['response']['code'] ) {

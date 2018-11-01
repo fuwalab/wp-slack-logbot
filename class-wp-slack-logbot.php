@@ -19,6 +19,7 @@ namespace wp_slack_logbot;
  */
 require_once 'includes/class-slack-logbot.php';
 require_once 'includes/class-slack-api.php';
+require_once 'includes/class-slack-logbot-api.php';
 require_once 'includes/class-slack-logbot-exception.php';
 require_once 'admin/class-slack-logbot-admin.php';
 
@@ -45,21 +46,14 @@ class WP_Slack_Logbot {
 	var $slack_logbot_version = '1.0';
 
 	/**
-	 * Admin instance
-	 *
-	 * @var Slack_Logbot_Admin $admin
-	 */
-	var $admin;
-
-	/**
 	 * WP_Slack_Logbot constructor.
 	 */
 	function __construct() {
-		new Slack_Logbot();
 		$this->register_activation_hook();
 
-		// enable admin.
-		$this->admin = new Slack_Logbot_Admin();
+		new Slack_Logbot();
+		new Slack_Logbot_API();
+		new Slack_Logbot_Admin();
 	}
 
 	/**

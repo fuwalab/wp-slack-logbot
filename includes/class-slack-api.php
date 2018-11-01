@@ -1,6 +1,6 @@
 <?php
 /**
- * Slack_Api class
+ * Slack_API class
  *
  * @package WordPress
  * @subpackage WP Slack Logbot
@@ -63,7 +63,6 @@ class Slack_API {
 	function __construct( $access_token = '' ) {
 		if ( ! empty( $access_token ) ) {
 			$this->set_access_token( $access_token );
-			self::set_slack_team_info( self::SLACK_API_PATH_TEAM_INFO );
 		}
 	}
 

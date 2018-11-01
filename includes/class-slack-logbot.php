@@ -26,72 +26,11 @@ class Slack_Logbot {
 	var $slack_logbot_version = '1.0';
 
 	/**
-	 * Slack_Logbot constructor.
-	 */
-	function __construct() {
-		add_action( 'rest_api_init', array( $this, 'register_api_routes' ) );
-	}
-
-	/**
-	 * Regsiter API routes.
-	 */
-	public function register_api_routes() {
-		// event API request.
-		register_rest_route(
-			'wp-slack-logbot',
-			'/challenge',
-			array(
-				'methods'  => 'POST',
-				'callback' => array( $this, 'challenge' ),
-			)
-		);
-
-		// URL configration and verification.
-		register_rest_route(
-			'wp-slack-logbot',
-			'/enable_events',
-			array(
-				'methods'  => 'POST',
-				'callback' => array( $this, 'enable_events' ),
-			)
-		);
-
-		// Show channel list.
-		register_rest_route(
-			'wp-slack-logbot',
-			'/channel_list',
-			array(
-				'methods'  => 'GET',
-				'callback' => array( $this, 'channel_list' ),
-			)
-		);
-	}
-
-	/**
-	 * API Endpoint of event API request.
-	 */
-	public function challenge() {
-		$content_type = explode( ';', trim( strtolower( $_SERVER['CONTENT_TYPE'] ) ) );
-		$media_type   = $content_type[0];
-
-		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
-			$request = json_decode( file_get_contents( 'php://input' ), true );
-			$data    = $this->prepare_data( $request );
-			// Save slack log to log table.
-			$this->save( $data );
-
-			// Save slack log to wp_post table.
-			$this->upsert_post( $data );
-		}
-		return array();
-	}
-
-	/**
 	 * Update or Insert log data into wp_posts.
 	 *
 	 * @param array $data slack log data.
 	 */
-	private function upsert_post( $data ) {
+	public function upsert_post( $data ) {
 		global $wpdb;
 
 		$slack_api          = new Slack_API();
@@ -134,28 +73,14 @@ class Slack_Logbot {
 		$user_name    = $slack_api::request( $slack_api::SLACK_API_PATH_USER_INFO, array( 'user_id' => $data['event_user'] ) );
 		$table_name   = $wpdb->prefix . 'posts';
 		$wp_user_id   = get_current_user_id() > 0 ? get_current_user() : 1;
-		$post_id      = 0;
-		$post_title   = '[Slack Log] ' . $channel_name . '( ';
-		$post_title  .= get_date_from_gmt( date( 'Y-m-d H:i:s', $data['event_time'] ), get_option( 'date_format' ) );
-		$post_title  .= ' )';
-		$post_content = '<h2>' . $channel_name . '</h2>';
+		$post_title   = $this->generate_post_title( $data, $channel_name );
 		$current_date = get_date_from_gmt( date( 'Y-m-d H:i:s' ), 'Y-m-d' );
 
 		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1";
 		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
 
-		if ( count( $result ) > 0 ) {
-			$post_id      = $result[0]['ID'];
-			$post_content = $result[0]['post_content'];
-			$post_content = str_replace( '</ul>', '', $post_content );
-		} else {
-			$post_content .= '<ul>';
-		}
-
-		$post_content .= '<li>';
-		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
-		$post_content .= esc_attr( $data['event_text'] ) . ' ';
-		$post_content .= '@' . $user_name . '</li></ul>';
+		$post_id      = count( $result ) > 0 ? $result[0]['ID'] : 0;
+		$post_content = $this->generate_post_content_html( $data, $channel_name, $user_name, $result );
 
 		$post = array(
 			'ID'            => $post_id,
@@ -172,26 +97,45 @@ class Slack_Logbot {
 	}
 
 	/**
-	 * API Endpoint of URL configuration and verification.
+	 * Generate post title.
 	 *
-	 * @return array|string $response
+	 * @param array  $data slack log data.
+	 * @param string $channel_name slack channel name.
+	 * @return string title of blog post.
 	 */
-	public function enable_events() {
-		$content_type = explode( ';', trim( strtolower( $_SERVER['CONTENT_TYPE'] ) ) );
-		$media_type   = $content_type[0];
+	private function generate_post_title( $data, $channel_name ) {
+		$post_title  = '[Slack Log] ' . $channel_name . '( ';
+		$post_title .= get_date_from_gmt( date( 'Y-m-d H:i:s', $data['event_time'] ), get_option( 'date_format' ) );
+		$post_title .= ' )';
 
-		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
-			$request = json_decode( file_get_contents( 'php://input' ), true );
-			if ( isset( $request['challenge'] ) ) {
-				$response = array( 'challenge' => $request['challenge'] );
-			} else {
-				$response = 'error';
-			}
+		return $post_title;
+	}
+
+	/**
+	 * Generate post content HTML.
+	 *
+	 * @param array  $data slack log data.
+	 * @param string $channel_name slack channel name.
+	 * @param string $user_name slack user name.
+	 * @param array  $result wp post data.
+	 * @return mixed|string post content HTML.
+	 */
+	private function generate_post_content_html( $data, $channel_name, $user_name, $result ) {
+		$post_content = '<h2>' . $channel_name . '</h2>';
+
+		if ( count( $result ) > 0 ) {
+			$post_content = $result[0]['post_content'];
+			$post_content = str_replace( '</ul>', '', $post_content );
 		} else {
-			$response = 'error';
+			$post_content .= '<ul>';
 		}
 
-		return $response;
+		$post_content .= '<li>';
+		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
+		$post_content .= esc_attr( $data['event_text'] ) . ' ';
+		$post_content .= '@' . $user_name . '</li></ul>';
+
+		return $post_content;
 	}
 
 	/**
@@ -200,7 +144,7 @@ class Slack_Logbot {
 	 * @param array $data Post data.
 	 * @return array $values
 	 */
-	private function prepare_data( $data ) {
+	public function prepare_data( $data ) {
 		$values = array(
 			'team_id'             => $data['team_id'],
 			'type'                => $data['type'],
@@ -225,7 +169,7 @@ class Slack_Logbot {
 	 *
 	 * @param array $data Post data.
 	 */
-	private function save( $data ) {
+	public function save( $data ) {
 		global $wpdb;
 		$table_name = $wpdb->prefix . self::TABLE_NAME;
 
@@ -233,12 +177,5 @@ class Slack_Logbot {
 			$table_name,
 			$data
 		);
-	}
-
-	/**
-	 * Show channel list.
-	 */
-	public function channel_list() {
-		return array();
 	}
 }

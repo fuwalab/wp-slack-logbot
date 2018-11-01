@@ -19,9 +19,9 @@ class Slack_Logbot_Admin {
 	/**
 	 * Slack Bot access token.
 	 *
-	 * @var $slack_access_token Slack_Logbot_Admin Slack access token.
+	 * @var string $slack_access_token Slack access token.
 	 */
-	public $slack_access_token;
+	var $slack_access_token;
 
 	/**
 	 * Slack_Logbot_Admin constructor.

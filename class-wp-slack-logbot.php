@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:     WP Slack Logbot
- * Plugin URI:      PLUGIN SITE HERE
+ * Plugin URI:      https://4tp.pics/
  * Description:     Stores all messages of particular channels on slack. And able to see them.
  * Author:          ryotsun
  * Author URI:      https://4to.pics/

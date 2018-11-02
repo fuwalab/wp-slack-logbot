@@ -1,14 +1,19 @@
 # wp-slack-logbot
 
 ## Descriptions
-Contributors: [ryotsun](https://profiles.wordpress.org/ryotsun)
-Tags: WordPress, Slack, logs
-Requires at least: 4.9
-Tested up to: 5.1-alpha-20181015.143023
-Stable tag: 1.0.0
-License: GPLv2
+- Contributors: [ryotsun](https://profiles.wordpress.org/ryotsun)
+- Tags: WordPress, Slack, logs
+- Requires at least: 4.9
+- Tested up to: 5.1-alpha-20181015.143023
+- Stable tag: 1.0.0
+- License: GPLv2
 
 Stores all messages of particular channels on slack. And able to see them.
+
+## Specifications
+- Save all posts on slack to the database in WordPress
+- It will be made blog posts by each channel per day
+- Create categories by teams and channels automatically
 
 ## Installation
 
@@ -64,7 +69,10 @@ In order to complete installation, need to create a slack-bot user and issue the
 1. Go to Plugin Setting page
 	1. Paste `Bot User OAuth Access Token` which is copied earlier.
 		![insall app to workspace](https://github.com/fuwalab/wp-slack-logbot/blob/images/readme_images/8.png)
-	1. THen click `Save Changes` button
+	1. Then click `Save Changes` button
+
+### Invitation to the channel
+1. Invite `logbot` to the channels
+	- Both are allowed to invite logbot to the public channels and private channels.
 	
 That's all for installation.
-

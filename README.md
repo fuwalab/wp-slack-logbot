@@ -47,7 +47,7 @@ In order to complete installation, need to create a slack-bot user and issue the
 		- `message.groups`
 	1. Click `Save Changes`
 	1. After saving completed, follow the direction
-		![insall app to workspace](https://github.com/fuwalab/wp-slack-logbot/blob/images/readme_images/5.png)
+		![after saving completed](https://github.com/fuwalab/wp-slack-logbot/blob/images/readme_images/5.png)
 		
 1. `OAuth & Permissions` 
 	1. Click `OAuth & Permissions` link on the left side menu.
@@ -55,12 +55,15 @@ In order to complete installation, need to create a slack-bot user and issue the
 	
 	1. Click `Install App to Workspace` button
 	1. Then it will be shown `OAuth Access Token` and `Bot User OAuth Access Token`
+		![generated token](https://github.com/fuwalab/wp-slack-logbot/blob/images/readme_images/7.png)
+		
 		- Copy `Bot User OAuth Access Token`
 			- This time, only use `Bot User OAuth Access Token`
 	
 ### Plugin Settings
 1. Go to Plugin Setting page
 	1. Paste `Bot User OAuth Access Token` which is copied earlier.
+		![insall app to workspace](https://github.com/fuwalab/wp-slack-logbot/blob/images/readme_images/8.png)
 	1. THen click `Save Changes` button
 	
 That's all for installation.

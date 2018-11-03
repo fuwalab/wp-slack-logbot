@@ -58,7 +58,10 @@ class Slack_Logbot {
 		$query        = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1";
 
 		$result = $wpdb->get_results(
-			$wpdb->prepare( $query, array( $current_date, $post_title ) ),
+			$wpdb->prepare(
+				"SELECT * FROM $wpdb->posts WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1",
+				array( $current_date, $post_title )
+			),
 			ARRAY_A
 		);
 

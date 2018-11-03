@@ -38,11 +38,8 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 	function test_if_created_table() {
 		global $wpdb;
 
-		$slack_logbot = $this->slack_logbot;
-		$table_name   = $wpdb->prefix . $slack_logbot::TABLE_NAME;
-
 		$expected = '0';
-		$actual   = $wpdb->get_var( "select count(*) from $table_name" );
+		$actual   = $wpdb->get_var( "select count(*) from {$wpdb->prefix}slack_logbot" );
 		$this->assertSame( $expected, $actual );
 	}
 
@@ -55,12 +52,10 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		global $wpdb;
 
 		$slack_logbot = $this->slack_logbot;
-		$table_name   = $wpdb->prefix . $slack_logbot::TABLE_NAME;
-
-		$data = $this->get_slack_post();
+		$data         = $this->get_slack_post();
 		$slack_logbot->save( $data );
 
-		$result = $wpdb->get_row( "select * from $table_name limit 1" );
+		$result = $wpdb->get_row( "select * from {$wpdb->prefix}slack_logbot limit 1" );
 
 		$this->assertSame( $result->id, '1' );
 		$this->assertSame( $data['team_id'], $result->team_id );
@@ -104,7 +99,7 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$wp_user_id = get_current_user_id() > 0 ? get_current_user() : 1;
 		$post       = array(
 			'ID'            => 0,
-			'post_title'    => '[Slack Logbot] sample channel(2018-10-15)',
+			'post_title'    => '[Slack Log] sample channel( 2018-10-15 )',
 			'post_content'  => 'sample post message.',
 			'post_status'   => 'publish',
 			'post_author'   => $wp_user_id,
@@ -116,11 +111,10 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$method->setAccessible( true );
 		$method->invoke( $this->slack_logbot, $post );
 
-		$table_name = $wpdb->prefix . 'posts';
-		$result     = $wpdb->get_results( "select * from $table_name", ARRAY_A );
+		$result = $wpdb->get_results( "select * from $wpdb->posts", ARRAY_A );
 
 		$this->assertSame( count( $result ), 1 );
-		$this->assertSame( $result[0]['post_title'], '[Slack Logbot] sample channel(2018-10-15)' );
+		$this->assertSame( $result[0]['post_title'], '[Slack Log] sample channel( 2018-10-15 )' );
 		$this->assertSame( $result[0]['post_content'], 'sample post message.' );
 	}
 
@@ -139,6 +133,57 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$expected_data = $this->get_slack_post();
 
 		$this->assertEquals( $expected_data, $actual_data );
+	}
+
+	/**
+	 * Test if wp post title is correct.
+	 *
+	 * @throws ReflectionException Reflection exception.
+	 * @since 1.0.0
+	 */
+	function test_generate_post_title() {
+		$data = $this->get_slack_post();
+
+		$reflection = new \ReflectionClass( $this->slack_logbot );
+		$method     = $reflection->getMethod( 'generate_post_title' );
+		$method->setAccessible( true );
+		$title    = $method->invoke( $this->slack_logbot, $data, 'sample channel' );
+		$expected = '[Slack Log] sample channel( October 15, 2018 )';
+
+		$this->assertSame( $title, $expected );
+	}
+
+	/**
+	 * Test if wp post content is correct.
+	 *
+	 * @throws ReflectionException Reflection exception.
+	 * @since 1.0.0
+	 */
+	function test_generate_post_content_html() {
+		$data = $this->get_slack_post();
+
+		// In case there is no post.
+		$result   = array();
+		$expected = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am dummy message. @test user</li></ul>';
+
+		$reflection = new \ReflectionClass( $this->slack_logbot );
+		$method     = $reflection->getMethod( 'generate_post_content_html' );
+		$method->setAccessible( true );
+		$content = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'test user', $result );
+
+		$this->assertSame( $content, $expected );
+
+		// In case post is already existing.
+		$result             = array(
+			array(
+				'post_content' => $content,
+			),
+		);
+		$expected           = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am dummy message. @test user</li><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am connecting continuous message. @another user</li></ul>';
+		$data['event_text'] = 'connecting continuous message.';
+		$content            = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'another user', $result );
+
+		$this->assertSame( $content, $expected );
 	}
 
 	/**

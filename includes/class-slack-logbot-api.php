@@ -27,7 +27,7 @@ class Slack_Logbot_API {
 	 * Regsiter API routes.
 	 */
 	public function register_api_routes() {
-		// Event API
+		// Event API.
 		register_rest_route(
 			'wp-slack-logbot',
 			'/events',
@@ -51,7 +51,7 @@ class Slack_Logbot_API {
 		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
 			$slack_logbot = new Slack_Logbot();
 			$request      = json_decode( file_get_contents( 'php://input' ), true );
-			
+
 			if ( isset( $request['challenge'] ) ) {
 				// For verification.
 				$response = array( 'challenge' => $request['challenge'] );

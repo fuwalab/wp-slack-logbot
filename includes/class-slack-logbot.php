@@ -76,8 +76,13 @@ class Slack_Logbot {
 		$post_title   = $this->generate_post_title( $data, $channel_name );
 		$current_date = get_date_from_gmt( date( 'Y-m-d H:i:s' ), 'Y-m-d' );
 
-		$query  = "SELECT * FROM $table_name WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1";
-		$result = $wpdb->get_results( $wpdb->prepare( $query, array( $current_date, $post_title ) ), ARRAY_A );
+		$result = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %s WHERE post_date > %s AND post_title = %s ORDER BY ID ASC LIMIT 1',
+				array( $table_name, $current_date, $post_title )
+			),
+			ARRAY_A
+		);
 
 		$post_id      = count( $result ) > 0 ? $result[0]['ID'] : 0;
 		$post_content = $this->generate_post_content_html( $data, $channel_name, $user_name, $result );
@@ -130,7 +135,14 @@ class Slack_Logbot {
 			$post_content .= '<ul>';
 		}
 
-		$post_content .= '<li>';
+		$msg_id = $data['event_client_msg_id'];
+
+		// System message will be null.
+		if ( $msg_id ) {
+			$post_content .= '<li id="' . $msg_id . '">';
+		} else {
+			$post_content .= '<li>';
+		}
 		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
 		$post_content .= esc_attr( $data['event_text'] ) . ' ';
 		$post_content .= '@' . $user_name . '</li></ul>';

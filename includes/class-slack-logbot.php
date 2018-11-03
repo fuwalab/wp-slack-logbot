@@ -28,40 +28,20 @@ class Slack_Logbot {
 	/**
 	 * Update or Insert log data into wp_posts.
 	 *
+	 * @throws Slack_Logbot_Exception If provided unexpected response from slack api.
 	 * @param array $data slack log data.
 	 */
 	public function upsert_post( $data ) {
 		global $wpdb;
 
-		$slack_api          = new Slack_API();
-		$team               = $slack_api::$team_info;
-		$args               = array( 'hide_empty' => 0 );
-		$terms              = get_terms( 'category', $args );
-		$parent_category_id = 0;
-		$category_id        = 0;
-		$channel_name       = $slack_api::request( $slack_api::SLACK_API_PATH_CONVERSATION_INFO, array( 'channel_id' => $data['event_channel'] ) );
+		$slack_api    = new Slack_API();
+		$team         = $slack_api::$team_info;
+		$channel_name = $slack_api::request( $slack_api::SLACK_API_PATH_CONVERSATION_INFO, array( 'channel_id' => $data['event_channel'] ) );
 
-		foreach ( $terms as $term ) {
-			if ( $team['name'] == $term->slug ) {
-				$parent_category_id = $term->term_id;
-			}
-			if ( $channel_name == $term->slug ) {
-				$category_id = $term->term_id;
-			}
-		}
+		list( $parent_category_id, $category_id ) = $this->get_category_ids( $team['name'], $channel_name );
 
-		$parent_category = array(
-			'cat_ID'   => $parent_category_id,
-			'cat_name' => $team['name'],
-			'taxonomy' => 'category',
-		);
-
-		$category = array(
-			'cat_ID'          => $category_id,
-			'cat_name'        => $channel_name,
-			'taxonomy'        => 'category',
-			'category_parent' => $parent_category_id,
-		);
+		$parent_category = $this->get_category( $team['name'], $parent_category_id );
+		$category        = $this->get_category( $channel_name, $category_id, $parent_category['cat_ID'] );
 
 		if ( file_exists( ABSPATH . '/wp-admin/includes/taxonomy.php' ) ) {
 			require_once( ABSPATH . '/wp-admin/includes/taxonomy.php' );
@@ -93,9 +73,59 @@ class Slack_Logbot {
 			'post_author'   => $wp_user_id,
 			'post_category' => array( $parent_category_id, $category_id ),
 		);
+		$this->save_wp_post( $post );
+	}
 
+	/**
+	 * Get category id and parent_category_id.
+	 *
+	 * @param string $team_name slack team name.
+	 * @param string $channel_name slack channel name.
+	 * @return array array of category ids.
+	 */
+	private function get_category_ids( $team_name, $channel_name ) {
+		$parent_category_id = 0;
+		$category_id        = 0;
+
+		$args  = array( 'hide_empty' => 0 );
+		$terms = get_terms( 'category', $args );
+		foreach ( $terms as $term ) {
+			if ( $team_name == $term->slug ) {
+				$parent_category_id = $term->term_id;
+			}
+			if ( $channel_name == $term->slug ) {
+				$category_id = $term->term_id;
+			}
+		}
+
+		return array( $parent_category_id, $category_id );
+	}
+
+	/**
+	 * Get category content.
+	 *
+	 * @param string $cat_name category name.
+	 * @param int    $category_id category id.
+	 * @param int    $parent_category_id parent category id.
+	 * @return array category content.
+	 */
+	private function get_category( $cat_name, $category_id = 0, $parent_category_id = 0 ) {
+		return array(
+			'cat_ID'          => $category_id,
+			'cat_name'        => $cat_name,
+			'taxonomy'        => 'category',
+			'category_parent' => $parent_category_id,
+		);
+	}
+
+	/**
+	 * Insert or update wp_posts.
+	 *
+	 * @param array $post post data to save wp_posts.
+	 */
+	private function save_wp_post( $post ) {
 		remove_action( 'post_updated', 'wp_save_post_revision' );
-		$post_id > 0 ? wp_update_post( $post ) : wp_insert_post( $post );
+		$post['ID'] > 0 ? wp_update_post( $post ) : wp_insert_post( $post );
 		add_action( 'post_updated', 'wp_save_post_revision' );
 	}
 

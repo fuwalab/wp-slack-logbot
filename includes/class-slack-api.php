@@ -59,11 +59,14 @@ class Slack_API {
 	 * Slack_API constructor.
 	 *
 	 * @param string $access_token Access token.
+	 * @throws Slack_Logbot_Exception Slack api exception.
 	 */
 	function __construct( $access_token = '' ) {
-		if ( ! empty( $access_token ) ) {
-			$this->set_access_token( $access_token );
+		if ( empty( $access_token ) ) {
+			$access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
 		}
+		$this->set_access_token( $access_token );
+		$this->request( self::SLACK_API_PATH_TEAM_INFO );
 	}
 
 	/**

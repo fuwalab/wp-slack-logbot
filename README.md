@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/fuwalab/wp-slack-logbot.svg?branch=master)](https://travis-ci.com/fuwalab/wp-slack-logbot)
+[![Maintainability](https://api.codeclimate.com/v1/badges/6a452504c6604a59f7c4/maintainability)](https://codeclimate.com/github/fuwalab/wp-slack-logbot/maintainability)
+[![GitHub license](https://img.shields.io/github/license/fuwalab/wp-slack-logbot.svg)](https://github.com/fuwalab/wp-slack-logbot/blob/master/LICENSE)
 # wp-slack-logbot
 
 ## Descriptions

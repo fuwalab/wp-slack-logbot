@@ -94,7 +94,7 @@ class Slack_Logbot_Admin {
 		<div class="wrap">
 			<h2><?php echo WP_Slack_Logbot::$plugin_name; ?></h2>
 			<?php settings_errors(); ?>
-			<p><a href="https://github.com/fuwalab/wp-slack-logbot#installation" target="_blank"><?php echo __( 'See more details about settings.'  ) ;?></a></p>
+			<p><a href="https://github.com/fuwalab/wp-slack-logbot#installation" target="_blank"><?php echo __( 'See more details about settings.' ); ?></a></p>
 			<form method="post" action="options.php">
 				<table class="form-table">
 					<tr valign="top">

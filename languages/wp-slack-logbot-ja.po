@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WP Slack Logbot 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-slack-logbot\n"
-"POT-Creation-Date: 2018-11-01 15:51:26+00:00\n"
+"POT-Creation-Date: 2018-11-02 17:03:11+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,6 +31,10 @@ msgstr "Slack Bot のアクセストークンを設定してください。"
 #: admin/class-slack-logbot-admin.php:80
 msgid "Go to plugin setting page."
 msgstr "プラグイン設定ページへ"
+
+#: admin/class-slack-logbot-admin.php:97
+msgid "See more details about settings."
+msgstr "設定の詳細ページを見る"
 
 #: includes/class-slack-api.php:99
 msgid "API path should not be null."
@@ -61,7 +65,7 @@ msgid "WP Slack Logbot"
 msgstr "WP Slack ログボット"
 
 #. Plugin URI of the plugin/theme
-msgid "PLUGIN SITE HERE"
+msgid "https://github.com/fuwalab/wp-slack-logbot"
 msgstr ""
 
 #. Description of the plugin/theme

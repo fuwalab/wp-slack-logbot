@@ -59,10 +59,12 @@ class Slack_Logbot_API {
 			} else {
 				$data = $slack_logbot->prepare_data( $request );
 				// Save slack log to log table.
-				$slack_logbot->save( $data );
+				$result = $slack_logbot->save( $data );
 
-				// Save slack log to wp_post table.
-				$slack_logbot->upsert_post( $data );
+				if ( $result ) {
+					// Save slack log to wp_post table.
+					$slack_logbot->upsert_post( $data );
+				}
 			}
 		} else {
 			$response = 'error';

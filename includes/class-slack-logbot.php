@@ -38,10 +38,10 @@ class Slack_Logbot {
 		$team         = $slack_api::$team_info;
 		$channel_name = $slack_api::request( $slack_api::SLACK_API_PATH_CONVERSATION_INFO, array( 'channel_id' => $data['event_channel'] ) );
 
-		list( $parent_category_id, $category_id ) = $this->get_category_ids( $team['name'], $channel_name );
+		list( $parent_category_id, $category_id ) = $this->get_category_ids( $team['domain'], $channel_name );
 
-		$parent_category = $this->get_category( $team['name'], $parent_category_id );
-		$category        = $this->get_category( $channel_name, $category_id, $parent_category['cat_ID'] );
+		$parent_category = $this->get_category( $team['domain'], null, $parent_category_id );
+		$category        = $this->get_category( $channel_name, $team['domain'], $category_id, $parent_category['cat_ID'] );
 
 		if ( file_exists( ABSPATH . '/wp-admin/includes/taxonomy.php' ) ) {
 			require_once( ABSPATH . '/wp-admin/includes/taxonomy.php' );
@@ -51,7 +51,6 @@ class Slack_Logbot {
 		$category_id        = wp_insert_category( $category );
 
 		$user_name    = $slack_api::request( $slack_api::SLACK_API_PATH_USER_INFO, array( 'user_id' => $data['event_user'] ) );
-		$table_name   = $wpdb->prefix . 'posts';
 		$wp_user_id   = get_current_user_id() > 0 ? get_current_user() : 1;
 		$post_title   = $this->generate_post_title( $data, $channel_name );
 		$current_date = get_date_from_gmt( date( 'Y-m-d H:i:s' ), 'Y-m-d' );
@@ -81,21 +80,22 @@ class Slack_Logbot {
 	/**
 	 * Get category id and parent_category_id.
 	 *
-	 * @param string $team_name slack team name.
+	 * @param string $team_domain slack team domain.
 	 * @param string $channel_name slack channel name.
 	 * @return array array of category ids.
 	 */
-	private function get_category_ids( $team_name, $channel_name ) {
+	private function get_category_ids( $team_domain, $channel_name ) {
 		$parent_category_id = 0;
 		$category_id        = 0;
 
+		$slug  = $channel_name . '_' . $team_domain;
 		$args  = array( 'hide_empty' => 0 );
 		$terms = get_terms( 'category', $args );
 		foreach ( $terms as $term ) {
-			if ( $team_name == $term->slug ) {
+			if ( $team_domain == $term->slug ) {
 				$parent_category_id = $term->term_id;
 			}
-			if ( $channel_name == $term->slug ) {
+			if ( $slug == $term->slug ) {
 				$category_id = $term->term_id;
 			}
 		}
@@ -106,17 +106,20 @@ class Slack_Logbot {
 	/**
 	 * Get category content.
 	 *
-	 * @param string $cat_name category name.
-	 * @param int    $category_id category id.
-	 * @param int    $parent_category_id parent category id.
+	 * @param string      $cat_name category name.
+	 * @param string|null $team_domain slack team domain.
+	 * @param int         $category_id category id.
+	 * @param int         $parent_category_id parent category id.
 	 * @return array category content.
 	 */
-	private function get_category( $cat_name, $category_id = 0, $parent_category_id = 0 ) {
+	private function get_category( $cat_name, $team_domain = null, $category_id = 0, $parent_category_id = 0 ) {
+		$slug = $team_domain ? $cat_name . '_' . $team_domain : $cat_name;
 		return array(
-			'cat_ID'          => $category_id,
-			'cat_name'        => $cat_name,
-			'taxonomy'        => 'category',
-			'category_parent' => $parent_category_id,
+			'cat_ID'            => $category_id,
+			'cat_name'          => $cat_name,
+			'category_nicename' => $slug,
+			'taxonomy'          => 'category',
+			'category_parent'   => $parent_category_id,
 		);
 	}
 

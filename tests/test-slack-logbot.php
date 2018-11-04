@@ -88,9 +88,9 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		// Make category first.
 		$method = $reflection->getMethod( 'get_category' );
 		$method->setAccessible( true );
-		$parent_category    = $method->invoke( $this->slack_logbot, 'Sample Team' );
+		$parent_category    = $method->invoke( $this->slack_logbot, 'Sample Team', 'team_domain' );
 		$parent_category_id = wp_insert_category( $parent_category );
-		$category           = $method->invoke( $this->slack_logbot, 'sample channel', 0, $parent_category_id );
+		$category           = $method->invoke( $this->slack_logbot, 'sample channel', 'team_domain', 0, $parent_category_id );
 		$category_id        = wp_insert_category( $category );
 
 		$this->assertTrue( $parent_category_id > 0 );

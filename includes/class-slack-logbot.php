@@ -39,7 +39,7 @@ class Slack_Logbot {
 		$channel_name = $slack_api::request( $slack_api::SLACK_API_PATH_CONVERSATION_INFO, array( 'channel_id' => $data['event_channel'] ) );
 
 		list( $parent_category_id, $category_id ) = $this->get_category_ids( $team['domain'], $channel_name );
-		
+
 		$parent_category = $this->get_category( $team['domain'], null, $parent_category_id );
 		$category        = $this->get_category( $channel_name, $team['domain'], $category_id, $parent_category['cat_ID'] );
 
@@ -87,7 +87,7 @@ class Slack_Logbot {
 	private function get_category_ids( $team_domain, $channel_name ) {
 		$parent_category_id = 0;
 		$category_id        = 0;
-		
+
 		$slug  = $channel_name . '_' . $team_domain;
 		$args  = array( 'hide_empty' => 0 );
 		$terms = get_terms( 'category', $args );

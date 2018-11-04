@@ -7,6 +7,7 @@
 
 use wp_slack_logbot\Slack_Logbot;
 use wp_slack_logbot\WP_Slack_Logbot;
+use wp_slack_logbot\Slack_Logbot_Admin;
 
 /**
  * Class Slack_Logbot_Test
@@ -184,6 +185,33 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$content            = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'another user', $result );
 
 		$this->assertSame( $content, $expected );
+	}
+
+	/**
+	 * Test if error message is correct.
+	 */
+	function test_error_massage_in_admin() {
+		$admin = new Slack_Logbot_Admin();
+
+		ob_start();
+		// In case of access token is missing.
+		$admin->show_error_message();
+		$message_empty  = ob_get_contents();
+		$expected_empty = 'Please set Access Token of your Slack bot.';
+		ob_end_clean();
+
+		// In case of access token is wrong.
+		ob_start();
+		// Set token.
+		add_option( 'wp-slack-logbot-bot-user-oauth-access-token', 'dummy token' );
+		$admin = new Slack_Logbot_Admin();
+		$admin->show_error_message();
+		$message_wrong  = ob_get_contents();
+		$expected_wrong = 'invalid_auth';
+		ob_end_clean();
+
+		$this->assertContains( $expected_empty, $message_empty );
+		$this->assertContains( $expected_wrong, $message_wrong );
 	}
 
 	/**

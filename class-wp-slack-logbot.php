@@ -49,7 +49,7 @@ class WP_Slack_Logbot {
 	 * WP_Slack_Logbot constructor.
 	 */
 	function __construct() {
-		$this->register_activation_hook();
+		$this->register();
 
 		new Slack_Logbot();
 		new Slack_Logbot_API();
@@ -59,8 +59,9 @@ class WP_Slack_Logbot {
 	/**
 	 * Register activation hook.
 	 */
-	public function register_activation_hook() {
+	public function register() {
 		register_activation_hook( __FILE__, array( $this, 'install' ) );
+		load_plugin_textdomain( dirname( plugin_basename( __FILE__ ) ), false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 	}
 
 	/**

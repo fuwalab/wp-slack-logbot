@@ -41,7 +41,8 @@ class Slack_Logbot_API {
 	/**
 	 * API Endpoint of URL event API request.
 	 *
-	 * @return array|string $response
+	 * @return array|null|string $response
+	 * @throws Slack_Logbot_Exception Logbot exception.
 	 */
 	public function events() {
 		$content_type = explode( ';', trim( strtolower( $_SERVER['CONTENT_TYPE'] ) ) );

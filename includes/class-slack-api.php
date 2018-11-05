@@ -59,11 +59,14 @@ class Slack_API {
 	 * Slack_API constructor.
 	 *
 	 * @param string $access_token Access token.
+	 * @throws Slack_Logbot_Exception Slack api exception.
 	 */
 	function __construct( $access_token = '' ) {
-		if ( ! empty( $access_token ) ) {
-			$this->set_access_token( $access_token );
+		if ( empty( $access_token ) ) {
+			$access_token = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
 		}
+		$this->set_access_token( $access_token );
+		$this->request( self::SLACK_API_PATH_TEAM_INFO );
 	}
 
 	/**
@@ -96,7 +99,7 @@ class Slack_API {
 		}
 		try {
 			if ( empty( $path ) ) {
-				throw new Slack_Logbot_Exception( __( 'API path should not be null.' ), 500 );
+				throw new Slack_Logbot_Exception( __( 'API path should not be null.', 'wp-slack-logbot' ), 500 );
 			}
 			switch ( $path ) {
 				case self::SLACK_API_PATH_AUTH_TEST:
@@ -112,7 +115,7 @@ class Slack_API {
 					$response = self::get_slack_user_name( $path, $wp_params, $options );
 					break;
 				default:
-					throw new Slack_Logbot_Exception( __( 'Unknown API path.' ), 500 );
+					throw new Slack_Logbot_Exception( __( 'Unknown API path.', 'wp-slack-logbot' ), 500 );
 					break;
 			}
 		} catch ( Slack_Logbot_Exception $e ) {
@@ -174,7 +177,7 @@ class Slack_API {
 
 		try {
 			if ( ! isset( $options['channel_id'] ) ) {
-				throw new Slack_Logbot_Exception( __( 'channel ID should be set.' ), 500 );
+				throw new Slack_Logbot_Exception( __( 'channel ID should be set.', 'wp-slack-logbot' ), 500 );
 			}
 			$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token . '&channel=' . $options['channel_id'];
 			$response    = wp_remote_get( $request_url, $wp_params );
@@ -186,7 +189,7 @@ class Slack_API {
 				}
 			}
 			if ( '' == $channel_name ) {
-				throw new Slack_Logbot_Exception( __( 'Failed to fetching channel name via Slack API.' ), 500 );
+				throw new Slack_Logbot_Exception( __( 'Failed to fetching channel name via Slack API.', 'wp-slack-logbot' ), 500 );
 			}
 		} catch ( Slack_Logbot_Exception $e ) {
 			die( $e->getMessage() . '(' . $e->getCode() . ')' );
@@ -209,7 +212,7 @@ class Slack_API {
 
 		try {
 			if ( ! isset( $options['user_id'] ) ) {
-				throw new Slack_Logbot_Exception( __( 'user ID should be set.' ), 500 );
+				throw new Slack_Logbot_Exception( __( 'user ID should be set.', 'wp-slack-logbot' ), 500 );
 			}
 			$request_url = self::SLACK_API_BASE_URL . $path . '?token=' . self::$access_token . '&user=' . $options['user_id'];
 			$response    = wp_remote_get( $request_url, $wp_params );
@@ -221,7 +224,7 @@ class Slack_API {
 				}
 			}
 			if ( '' == $user_name ) {
-				throw new Slack_Logbot_Exception( __( 'Failed to fetching user name via Slack API.' ), 500 );
+				throw new Slack_Logbot_Exception( __( 'Failed to fetching user name via Slack API.', 'wp-slack-logbot' ), 500 );
 			}
 		} catch ( Slack_Logbot_Exception $e ) {
 			die( $e->getMessage() . '(' . $e->getCode() . ')' );

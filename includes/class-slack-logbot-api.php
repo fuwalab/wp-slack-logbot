@@ -27,62 +27,44 @@ class Slack_Logbot_API {
 	 * Regsiter API routes.
 	 */
 	public function register_api_routes() {
-		// event API request.
+		// Event API.
 		register_rest_route(
 			'wp-slack-logbot',
-			'/challenge',
+			'/events',
 			array(
 				'methods'  => 'POST',
-				'callback' => array( $this, 'challenge' ),
-			)
-		);
-
-		// URL configration and verification.
-		register_rest_route(
-			'wp-slack-logbot',
-			'/enable_events',
-			array(
-				'methods'  => 'POST',
-				'callback' => array( $this, 'enable_events' ),
+				'callback' => array( $this, 'events' ),
 			)
 		);
 	}
 
 	/**
-	 * API Endpoint of event API request.
+	 * API Endpoint of URL event API request.
+	 *
+	 * @return array|null|string $response
+	 * @throws Slack_Logbot_Exception Logbot exception.
 	 */
-	public function challenge() {
+	public function events() {
 		$content_type = explode( ';', trim( strtolower( $_SERVER['CONTENT_TYPE'] ) ) );
 		$media_type   = $content_type[0];
+		$response     = null;
 
 		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
 			$slack_logbot = new Slack_Logbot();
 			$request      = json_decode( file_get_contents( 'php://input' ), true );
-			$data         = $slack_logbot->prepare_data( $request );
-			// Save slack log to log table.
-			$slack_logbot->save( $data );
 
-			// Save slack log to wp_post table.
-			$slack_logbot->upsert_post( $data );
-		}
-		return array();
-	}
-
-	/**
-	 * API Endpoint of URL configuration and verification.
-	 *
-	 * @return array|string $response
-	 */
-	public function enable_events() {
-		$content_type = explode( ';', trim( strtolower( $_SERVER['CONTENT_TYPE'] ) ) );
-		$media_type   = $content_type[0];
-
-		if ( 'POST' == $_SERVER['REQUEST_METHOD'] && 'application/json' == $media_type ) {
-			$request = json_decode( file_get_contents( 'php://input' ), true );
 			if ( isset( $request['challenge'] ) ) {
+				// For verification.
 				$response = array( 'challenge' => $request['challenge'] );
 			} else {
-				$response = 'error';
+				$data = $slack_logbot->prepare_data( $request );
+				// Save slack log to log table.
+				$result = $slack_logbot->save( $data );
+
+				if ( $result ) {
+					// Save slack log to wp_post table.
+					$slack_logbot->upsert_post( $data );
+				}
 			}
 		} else {
 			$response = 'error';

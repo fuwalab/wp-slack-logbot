@@ -65,7 +65,7 @@ class WP_Slack_Logbot {
 		// load translation file.
 		load_plugin_textdomain( dirname( plugin_basename( __FILE__ ) ), false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		// uninstall hook.
-		register_uninstall_hook( __FILE__, 'self::uninstall' );
+		register_uninstall_hook( __FILE__, 'WP_Slack_Logbot::uninstall' );
 	}
 
 	/**

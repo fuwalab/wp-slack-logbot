@@ -191,10 +191,9 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 	 * Test if error message is correct.
 	 */
 	function test_error_massage_in_admin() {
-		$admin = new Slack_Logbot_Admin();
-
-		ob_start();
 		// In case of access token is missing.
+		ob_start();
+		$admin = new Slack_Logbot_Admin();
 		$admin->show_error_message();
 		$message_empty  = ob_get_contents();
 		$expected_empty = 'Please set Access Token of your Slack bot.';
@@ -212,6 +211,18 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 
 		$this->assertContains( $expected_empty, $message_empty );
 		$this->assertContains( $expected_wrong, $message_wrong );
+	}
+
+	/**
+	 * Test if reset options.
+	 */
+	function test_uninstall() {
+		WP_Slack_Logbot::uninstall();
+
+		$version = get_option( 'slack_logbot_version' );
+		$token   = get_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
+		$this->assertFalse( $version );
+		$this->assertFalse( $token );
 	}
 
 	/**

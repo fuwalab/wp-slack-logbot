@@ -1,11 +1,11 @@
-=== Wp Slack Logbot ===
+=== WP Slack Logbot ===
 Contributors: ryotsun
 Donate link:
 Tags: Slack, log, post
 Requires at least: 4.9
 Tested up to: 5.1-alpha-20181015.143023
 Requires PHP: 5.3
-Stable tag: 1.0.1
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,6 +76,9 @@ No information
 No information
 
 == Changelog ==
+
+= 1.1 =
+* Enabled uninstall hook to delete option value and drop log table
 
 = 1.0 =
 * First release

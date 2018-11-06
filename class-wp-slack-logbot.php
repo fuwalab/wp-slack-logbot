@@ -7,7 +7,7 @@
  * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         1.0
+ * Version:         1.1
  *
  * @package         Wp_Slack_Logbot
  */
@@ -43,7 +43,7 @@ class WP_Slack_Logbot {
 	 *
 	 * @var string $slack_logbot_version
 	 */
-	var $slack_logbot_version = '1.0';
+	var $slack_logbot_version = '1.1';
 
 	/**
 	 * WP_Slack_Logbot constructor.
@@ -60,8 +60,12 @@ class WP_Slack_Logbot {
 	 * Register activation hook.
 	 */
 	public function register() {
+		// activation hook.
 		register_activation_hook( __FILE__, array( $this, 'install' ) );
+		// load translation file.
 		load_plugin_textdomain( dirname( plugin_basename( __FILE__ ) ), false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+		// uninstall hook.
+		register_uninstall_hook( __FILE__, 'self::uninstall' );
 	}
 
 	/**
@@ -98,6 +102,17 @@ class WP_Slack_Logbot {
 		dbDelta( $sql );
 
 		add_option( 'slack_logbot_version', $this->slack_logbot_version );
+	}
+
+	/**
+	 * Uninstall plugin.
+	 */
+	public static function uninstall() {
+		global $wpdb;
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}slack_logbot" );
+
+		delete_option( 'slack_logbot_version' );
+		delete_option( 'wp-slack-logbot-bot-user-oauth-access-token' );
 	}
 }
 

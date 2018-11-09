@@ -4,12 +4,13 @@
 # wp-slack-logbot
 
 ## Descriptions
+- Plugin: [WP Slack Logbot](https://wordpress.org/plugins/wp-slack-logbot/)
 - Contributors: [ryotsun](https://profiles.wordpress.org/ryotsun)
 - Tags: WordPress, Slack, logs
 - Requires at least: 4.9
 - Tested up to: 5.1-alpha-20181015.143023
 - Requires PHP: 5.3
-- Stable tag: 1.0.0
+- Stable tag: 1.1.1
 - License: GPLv2 or later
 
 Stores all messages of particular channels on slack. And able to see them.

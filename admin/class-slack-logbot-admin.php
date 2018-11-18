@@ -38,7 +38,7 @@ class Slack_Logbot_Admin {
 	 * Create admin menu.
 	 */
 	public function create_admin_menu() {
-		add_menu_page( 'WP Slack Logbot Settings', 'WP Slack Logbot', 'administrator', __FILE__, array( $this, 'show_page' ), plugins_url( '/images/icon.png', __FILE__ ) );
+		add_submenu_page( 'options-general.php', 'WP Slack Logbot Settings', 'WP Slack Logbot', 'administrator', __FILE__, array( $this, 'show_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 	}
 

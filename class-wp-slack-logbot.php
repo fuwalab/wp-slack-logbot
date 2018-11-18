@@ -7,7 +7,7 @@
  * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         1.1
+ * Version:         1.2
  *
  * @package         Wp_Slack_Logbot
  */

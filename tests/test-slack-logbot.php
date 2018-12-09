@@ -165,7 +165,7 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 
 		// In case there is no post.
 		$result   = array();
-		$expected = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am dummy message. @test user</li></ul>';
+		$expected = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am @test user dummy message.</li></ul>';
 
 		$reflection = new \ReflectionClass( $this->slack_logbot );
 		$method     = $reflection->getMethod( 'generate_post_content_html' );
@@ -180,7 +180,7 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 				'post_content' => $content,
 			),
 		);
-		$expected           = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am dummy message. @test user</li><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am connecting continuous message. @another user</li></ul>';
+		$expected           = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am @test user dummy message.</li><li id="06e8b044-e420-4879-bf44-3f762dc8eecf">2:30 am @another user connecting continuous message.</li></ul>';
 		$data['event_text'] = 'connecting continuous message.';
 		$content            = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'another user', $result );
 

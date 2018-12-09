@@ -177,8 +177,9 @@ class Slack_Logbot {
 			$post_content .= '<li>';
 		}
 		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
-		$post_content .= esc_attr( $data['event_text'] ) . ' ';
-		$post_content .= '@' . $user_name . '</li></ul>';
+		$post_content .= '@' . $user_name . ' ';
+		$post_content .= esc_attr( $data['event_text'] );
+		$post_content .= '</li></ul>';
 
 		return $post_content;
 	}

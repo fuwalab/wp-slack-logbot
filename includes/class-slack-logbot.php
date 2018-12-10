@@ -177,8 +177,9 @@ class Slack_Logbot {
 			$post_content .= '<li>';
 		}
 		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
-		$post_content .= esc_attr( $data['event_text'] ) . ' ';
-		$post_content .= '@' . $user_name . '</li></ul>';
+		$post_content .= '@' . $user_name . ' ';
+		$post_content .= $this->replace_content( esc_html( $data['event_text'] ) );
+		$post_content .= '</li></ul>';
 
 		return $post_content;
 	}
@@ -225,5 +226,37 @@ class Slack_Logbot {
 		);
 
 		return $result;
+	}
+
+	/**
+	 * Replace user id to username, URL to hyperlinked URL.
+	 *
+	 * @param string $text Content.
+	 * @return string|string[]|null Replaced content.
+	 * @throws Slack_Logbot_Exception Slack_Logbot_Exception.
+	 */
+	private function replace_content( $text ) {
+		$slack_api = new Slack_API();
+		$ret_str   = $text;
+
+		// Replace user_id to username.
+		$count = preg_match_all( '/\&lt;@(?P<user_id>\w+)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern   = '/\&lt;@' . $match['user_id'][ $i ] . '\&gt;/';
+			$user_name = $slack_api::request( $slack_api::SLACK_API_PATH_USER_INFO, array( 'user_id' => $match['user_id'][ $i ] ) );
+
+			if ( ! empty( $user_name ) ) {
+				$ret_str = preg_replace( $pattern, '@' . $user_name, $ret_str );
+			}
+		}
+
+		// Replace URL to hyperlink URL.
+		$count = preg_match_all( '/\&lt;(?P<url>http.*?)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern = '{\&lt;' . $match['url'][ $i ] . '\&gt;}';
+			$ret_str = preg_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
+		}
+
+		return $ret_str;
 	}
 }

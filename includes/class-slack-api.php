@@ -227,7 +227,7 @@ class Slack_API {
 				throw new Slack_Logbot_Exception( __( 'Failed to fetching user name via Slack API.', 'wp-slack-logbot' ), 500 );
 			}
 		} catch ( Slack_Logbot_Exception $e ) {
-			die( $e->getMessage() . '(' . $e->getCode() . ')' );
+			error_log( $e->getMessage() . '(' . $e->getCode() . ')' );
 		}
 
 		return $user_name;

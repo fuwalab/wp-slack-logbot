@@ -151,7 +151,7 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$title    = $method->invoke( $this->slack_logbot, $data, 'sample channel' );
 		$expected = '[Slack Log] sample channel( October 15, 2018 )';
 
-		$this->assertSame( $title, $expected );
+		$this->assertSame( $expected, $title );
 	}
 
 	/**
@@ -184,7 +184,26 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 		$data['event_text'] = 'connecting continuous message.';
 		$content            = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'another user', $result );
 
-		$this->assertSame( $content, $expected );
+		$this->assertSame( $expected, $content );
+	}
+
+	/**
+	 * Check if post content will be replaced.
+	 *
+	 * @throws ReflectionException ReflectionException.
+	 * @since 1.3
+	 */
+	function test_replace_content() {
+		// Skip checking whether user name will be replaced because it needs to request to slack API.
+		$text = '&lt;https://www.example.com&gt;';
+
+		$reflection = new \ReflectionClass( $this->slack_logbot );
+		$method     = $reflection->getMethod( 'replace_content' );
+		$method->setAccessible( true );
+
+		$content       = $method->invoke( $this->slack_logbot, $text );
+		$expected_text = '<a href="https://www.example.com" rel="nofollow">https://www.example.com</a>';
+		$this->assertSame( $expected_text, $content );
 	}
 
 	/**

@@ -229,7 +229,7 @@ class Slack_Logbot {
 	}
 
 	/**
-	 * Replace user id to username, URL to hyperlinked URL.
+	 * Replace user id to username, URL to hyperlinked URL, etc.
 	 *
 	 * @param string $text Content.
 	 * @return string|string[]|null Replaced content.
@@ -237,6 +237,7 @@ class Slack_Logbot {
 	 */
 	private function replace_content( $text ) {
 		$slack_api = new Slack_API();
+		$team_info = $slack_api::$team_info;
 		$ret_str   = $text;
 
 		// Replace user_id to username.
@@ -255,6 +256,15 @@ class Slack_Logbot {
 		for ( $i = 0; $i < $count; $i++ ) {
 			$pattern = '{\&lt;' . $match['url'][ $i ] . '\&gt;}';
 			$ret_str = preg_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
+		}
+
+		// Replace channel id / channel name to hyperlink URL.
+		$count = preg_match_all( '/\&lt;#(?P<channel_id>\w+)\|(?P<channel_name>\w+)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern     = '/\&lt;#' . $match['channel_id'][ $i ] . '\|' . $match['channel_name'][ $i ] . '\&gt;/';
+			$channel_url = sprintf( 'https://%s.slack.com/messages/%s', $team_info['domain'], $match['channel_id'][ $i ] );
+			$link        = sprintf( '<a href="%s">#%s</a>', $channel_url, $match['channel_name'][ $i ] );
+			$ret_str     = preg_replace( $pattern, $link, $ret_str );
 		}
 
 		return $ret_str;

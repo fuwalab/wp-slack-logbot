@@ -163,7 +163,7 @@ class Slack_Logbot {
 
 		if ( count( $result ) > 0 ) {
 			$post_content = $result[0]['post_content'];
-			$post_content = str_replace( '</ul>', '', $post_content );
+			$post_content = preg_replace( '/<\/ul>\z/', '', $post_content );
 		} else {
 			$post_content .= '<ul>';
 		}
@@ -176,9 +176,11 @@ class Slack_Logbot {
 		} else {
 			$post_content .= '<li>';
 		}
-		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
-		$post_content .= '@' . $user_name . ' ';
-		$post_content .= $this->replace_content( esc_html( $data['event_text'] ) );
+		$post_content .= '<ul>';
+		$post_content .= '<li class="time">' . get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . '</li>';
+		$post_content .= '<li class="name">@' . $user_name . '</li>';
+		$post_content .= '<li class="content">' . $this->replace_content( esc_html( $data['event_text'] ) ) . '</li>';
+		$post_content .= '</ul>';
 		$post_content .= '</li></ul>';
 
 		return $post_content;

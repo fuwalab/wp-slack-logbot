@@ -163,7 +163,7 @@ class Slack_Logbot {
 
 		if ( count( $result ) > 0 ) {
 			$post_content = $result[0]['post_content'];
-			$post_content = str_replace( '</ul>', '', $post_content );
+			$post_content = preg_replace( '/<\/ul>\z/', '', $post_content );
 		} else {
 			$post_content .= '<ul>';
 		}
@@ -176,9 +176,12 @@ class Slack_Logbot {
 		} else {
 			$post_content .= '<li>';
 		}
-		$post_content .= get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . ' ';
-		$post_content .= esc_attr( $data['event_text'] ) . ' ';
-		$post_content .= '@' . $user_name . '</li></ul>';
+		$post_content .= '<ul>';
+		$post_content .= '<li class="time">' . get_date_from_gmt( $data['event_datetime'], get_option( 'time_format' ) ) . '</li>';
+		$post_content .= '<li class="name">@' . $user_name . '</li>';
+		$post_content .= '<li class="content">' . $this->replace_content( esc_html( $data['event_text'] ) ) . '</li>';
+		$post_content .= '</ul>';
+		$post_content .= '</li></ul>';
 
 		return $post_content;
 	}
@@ -225,5 +228,47 @@ class Slack_Logbot {
 		);
 
 		return $result;
+	}
+
+	/**
+	 * Replace user id to username, URL to hyperlinked URL, etc.
+	 *
+	 * @param string $text Content.
+	 * @return string|string[]|null Replaced content.
+	 * @throws Slack_Logbot_Exception Slack_Logbot_Exception.
+	 */
+	private function replace_content( $text ) {
+		$slack_api = new Slack_API();
+		$team_info = $slack_api::$team_info;
+		$ret_str   = $text;
+
+		// Replace user_id to username.
+		$count = preg_match_all( '/\&lt;@(?P<user_id>\w+)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern   = '/\&lt;@' . $match['user_id'][ $i ] . '\&gt;/';
+			$user_name = $slack_api::request( $slack_api::SLACK_API_PATH_USER_INFO, array( 'user_id' => $match['user_id'][ $i ] ) );
+
+			if ( ! empty( $user_name ) ) {
+				$ret_str = preg_replace( $pattern, '@' . $user_name, $ret_str );
+			}
+		}
+
+		// Replace URL to hyperlink URL.
+		$count = preg_match_all( '/\&lt;(?P<url>http.*?)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern = '{\&lt;' . $match['url'][ $i ] . '\&gt;}';
+			$ret_str = preg_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
+		}
+
+		// Replace channel id / channel name to hyperlink URL.
+		$count = preg_match_all( '/\&lt;#(?P<channel_id>\w+)\|(?P<channel_name>\w+)\&gt;/', $ret_str, $match );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$pattern     = '/\&lt;#' . $match['channel_id'][ $i ] . '\|' . $match['channel_name'][ $i ] . '\&gt;/';
+			$channel_url = sprintf( 'https://%s.slack.com/messages/%s', $team_info['domain'], $match['channel_id'][ $i ] );
+			$link        = sprintf( '<a href="%s">#%s</a>', $channel_url, $match['channel_name'][ $i ] );
+			$ret_str     = preg_replace( $pattern, $link, $ret_str );
+		}
+
+		return $ret_str;
 	}
 }

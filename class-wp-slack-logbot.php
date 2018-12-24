@@ -75,6 +75,14 @@ class WP_Slack_Logbot {
 		global $wpdb;
 		$table_name      = $wpdb->prefix . self::TABLE_NAME;
 		$charset_collate = $wpdb->get_charset_collate();
+		$version         = get_option( 'slack_logbot_version', 0 );
+		$has_table       = $wpdb->get_var( "SHOW TABLES LIKE '{$wpdb->prefix}slack_logbot'" );
+
+		if ( $has_table && $version <= '1.4' ) {
+			// Unique key has been changed since version 1.4.
+			// Delete duplicated event_id rows except for min id.
+			$wpdb->query( "DELETE FROM {$wpdb->prefix}slack_logbot WHERE {$wpdb->prefix}slack_logbot.id NOT IN (SELECT MIN(id) FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1) AND {$wpdb->prefix}slack_logbot.event_id IN (SELECT event_id FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1)" );
+		}
 
 		$sql = "CREATE TABLE $table_name (
 				id INT(11) NOT NULL AUTO_INCREMENT,
@@ -101,7 +109,7 @@ class WP_Slack_Logbot {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		dbDelta( $sql );
 
-		add_option( 'slack_logbot_version', $this->slack_logbot_version );
+		update_option( 'slack_logbot_version', $this->slack_logbot_version );
 	}
 
 	/**

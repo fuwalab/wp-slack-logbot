@@ -78,7 +78,7 @@ class WP_Slack_Logbot {
 		$version         = get_option( 'slack_logbot_version', 0 );
 		$has_table       = $wpdb->get_var( "SHOW TABLES LIKE '{$wpdb->prefix}slack_logbot'" );
 
-		if ( $has_table && $version <= '1.4' ) {
+		if ( $has_table && $version < '1.4' ) {
 			// Unique key has been changed since version 1.4.
 			// Delete duplicated event_id rows except for min id.
 			$wpdb->query( "DELETE FROM {$wpdb->prefix}slack_logbot WHERE {$wpdb->prefix}slack_logbot.id NOT IN (SELECT MIN(id) FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1) AND {$wpdb->prefix}slack_logbot.event_id IN (SELECT event_id FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1)" );

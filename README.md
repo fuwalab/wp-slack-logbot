@@ -10,7 +10,7 @@
 - Requires at least: 4.9
 - Tested up to: 5.1-alpha-20181015.143023
 - Requires PHP: 5.3
-- Stable tag: 1.3.0
+- Stable tag: 1.4.0
 - License: GPLv2 or later
 
 Stores all messages of particular channels on slack. And able to see them. 

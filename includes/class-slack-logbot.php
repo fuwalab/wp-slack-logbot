@@ -164,11 +164,10 @@ class Slack_Logbot {
 			$post_content .= '<ul>';
 		}
 
-		$msg_id = $data['event_client_msg_id'];
+		$event_id = $data['event_id'];
 
-		// System message will be null.
-		if ( $msg_id ) {
-			$post_content .= '<li id="' . $msg_id . '">';
+		if ( $event_id ) {
+			$post_content .= '<li id="' . $event_id . '">';
 		} else {
 			$post_content .= '<li>';
 		}

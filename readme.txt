@@ -5,7 +5,7 @@ Tags: Slack, log, post
 Requires at least: 4.9
 Tested up to: 5.1-alpha-20181015.143023
 Requires PHP: 5.3
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: LICENSE
 
@@ -76,6 +76,9 @@ No information
 No information
 
 == Changelog ==
+
+= 1.5 =
+* Minor bug fixes
 
 = 1.4 =
 * Minor bug fixes

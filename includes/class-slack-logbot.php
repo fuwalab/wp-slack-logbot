@@ -19,19 +19,15 @@ class Slack_Logbot {
 	const TABLE_NAME = 'slack_logbot';
 
 	/**
-	 * Slack Logbot version.
-	 *
-	 * @var string $slack_logbot_version
-	 */
-	var $slack_logbot_version = '1.0';
-
-	/**
 	 * Update or Insert log data into wp_posts.
 	 *
 	 * @throws Slack_Logbot_Exception If provided unexpected response from slack api.
 	 * @param array $data slack log data.
 	 */
 	public function upsert_post( $data ) {
+		if ( '' == $data['event_text'] ) {
+			return;
+		}
 		global $wpdb;
 
 		$slack_api    = new Slack_API();

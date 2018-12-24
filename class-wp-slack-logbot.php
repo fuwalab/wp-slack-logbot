@@ -7,7 +7,7 @@
  * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         1.3
+ * Version:         1.4
  *
  * @package         Wp_Slack_Logbot
  */
@@ -43,7 +43,7 @@ class WP_Slack_Logbot {
 	 *
 	 * @var string $slack_logbot_version
 	 */
-	var $slack_logbot_version = '1.1';
+	var $slack_logbot_version = '1.4';
 
 	/**
 	 * WP_Slack_Logbot constructor.
@@ -93,7 +93,7 @@ class WP_Slack_Logbot {
 				create_date DATE NOT NULL,
 				PRIMARY KEY id (id),
 				KEY channel (team_id, event_channel),
-				UNIQUE KEY message (event_id, event_client_msg_id),
+				UNIQUE KEY message (event_id),
 				KEY create_date (create_date),
 				KEY event_channel_type (event_channel_type)
   				) $charset_collate;";

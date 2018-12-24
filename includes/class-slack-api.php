@@ -221,6 +221,10 @@ class Slack_API {
 				$user_info_body = json_decode( $response['body'], true );
 				if ( ! isset( $user_info_body['error'] ) ) {
 					$user_name = $user_info_body['user']['profile']['display_name'];
+
+					if ( '' == $user_name ) {
+						$user_name = $user_info_body['user']['profile']['real_name'];
+					}
 				}
 			}
 			if ( '' == $user_name ) {

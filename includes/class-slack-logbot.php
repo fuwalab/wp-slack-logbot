@@ -251,8 +251,8 @@ class Slack_Logbot {
 		// Replace URL to hyperlink URL.
 		$count = preg_match_all( '/\&lt;(?P<url>http.*?)\&gt;/', $ret_str, $match );
 		for ( $i = 0; $i < $count; $i++ ) {
-			$pattern = '{\&lt;' . $match['url'][ $i ] . '\&gt;}';
-			$ret_str = preg_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
+			$pattern = '&lt;' . $match['url'][ $i ] . '&gt;';
+			$ret_str = str_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
 		}
 
 		// Replace channel id / channel name to hyperlink URL.

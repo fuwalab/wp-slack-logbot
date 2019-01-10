@@ -196,14 +196,14 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 	 */
 	function test_replace_content() {
 		// Skip checking whether user name will be replaced because it needs to request to slack API.
-		$text = '&lt;https://www.example.com&gt;';
+		$text = '&lt;https://www.example.com/?sort=milestone&amp;asc=1&amp;page=1&gt;';
 
 		$reflection = new \ReflectionClass( $this->slack_logbot );
 		$method     = $reflection->getMethod( 'replace_content' );
 		$method->setAccessible( true );
 
 		$content       = $method->invoke( $this->slack_logbot, $text );
-		$expected_text = '<a href="https://www.example.com" rel="nofollow">https://www.example.com</a>';
+		$expected_text = '<a href="https://www.example.com/?sort=milestone&#038;asc=1&#038;page=1" rel="nofollow">https://www.example.com/?sort=milestone&#038;asc=1&#038;page=1</a>';
 		$this->assertSame( $expected_text, $content );
 	}
 

@@ -264,6 +264,10 @@ class Slack_Logbot {
 			$ret_str     = preg_replace( $pattern, $link, $ret_str );
 		}
 
+		// Replace mention strings to @channel or @here.
+		$ret_str = str_replace( '&lt;!channel&gt;', '@channel', $ret_str );
+		$ret_str = str_replace( '&lt;!here&gt;', '@here', $ret_str );
+
 		return $ret_str;
 	}
 }

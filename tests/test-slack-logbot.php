@@ -165,7 +165,7 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 
 		// In case there is no post.
 		$result   = array();
-		$expected = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf"><ul><li class="time">2:30 am</li><li class="name">test user</li><li class="content">dummy message.</li></ul></li></ul>';
+		$expected = '<h2>sample channel</h2><ul><li id="EvDD486j8"><ul><li class="time">2:30 am</li><li class="name">test user</li><li class="content">dummy message.</li></ul></li></ul>';
 
 		$reflection = new \ReflectionClass( $this->slack_logbot );
 		$method     = $reflection->getMethod( 'generate_post_content_html' );
@@ -180,7 +180,8 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 				'post_content' => $content,
 			),
 		);
-		$expected           = '<h2>sample channel</h2><ul><li id="06e8b044-e420-4879-bf44-3f762dc8eecf"><ul><li class="time">2:30 am</li><li class="name">test user</li><li class="content">dummy message.</li></ul></li><li id="06e8b044-e420-4879-bf44-3f762dc8eecf"><ul><li class="time">2:30 am</li><li class="name">another user</li><li class="content">connecting continuous message.</li></ul></li></ul>';
+		$expected           = '<h2>sample channel</h2><ul><li id="EvDD486j8"><ul><li class="time">2:30 am</li><li class="name">test user</li><li class="content">dummy message.</li></ul></li><li id="EvDD486jd"><ul><li class="time">2:30 am</li><li class="name">another user</li><li class="content">connecting continuous message.</li></ul></li></ul>';
+		$data['event_id']   = 'EvDD486jd';
 		$data['event_text'] = 'connecting continuous message.';
 		$content            = $method->invoke( $this->slack_logbot, $data, 'sample channel', 'another user', $result );
 
@@ -195,14 +196,37 @@ class Slack_Logbot_Test extends WP_UnitTestCase {
 	 */
 	function test_replace_content() {
 		// Skip checking whether user name will be replaced because it needs to request to slack API.
-		$text = '&lt;https://www.example.com&gt;';
+		// Check if url will be replaced to hyperlink.
+		$text = '&lt;https://www.example.com/?sort=milestone&amp;asc=1&amp;page=1&gt;';
 
 		$reflection = new \ReflectionClass( $this->slack_logbot );
 		$method     = $reflection->getMethod( 'replace_content' );
 		$method->setAccessible( true );
 
 		$content       = $method->invoke( $this->slack_logbot, $text );
-		$expected_text = '<a href="https://www.example.com" rel="nofollow">https://www.example.com</a>';
+		$expected_text = '<a href="https://www.example.com/?sort=milestone&#038;asc=1&#038;page=1" rel="nofollow">https://www.example.com/?sort=milestone&#038;asc=1&#038;page=1</a>';
+		$this->assertSame( $expected_text, $content );
+
+		// Check if mention will be replaced to @channel.
+		$text = '&lt;!channel&gt;';
+
+		$reflection = new \ReflectionClass( $this->slack_logbot );
+		$method     = $reflection->getMethod( 'replace_content' );
+		$method->setAccessible( true );
+
+		$content       = $method->invoke( $this->slack_logbot, $text );
+		$expected_text = '@channel';
+		$this->assertSame( $expected_text, $content );
+
+		// Check if mention will be replaced to @here.
+		$text = '&lt;!here&gt;';
+
+		$reflection = new \ReflectionClass( $this->slack_logbot );
+		$method     = $reflection->getMethod( 'replace_content' );
+		$method->setAccessible( true );
+
+		$content       = $method->invoke( $this->slack_logbot, $text );
+		$expected_text = '@here';
 		$this->assertSame( $expected_text, $content );
 	}
 

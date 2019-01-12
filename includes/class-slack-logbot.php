@@ -164,11 +164,10 @@ class Slack_Logbot {
 			$post_content .= '<ul>';
 		}
 
-		$msg_id = $data['event_client_msg_id'];
+		$event_id = $data['event_id'];
 
-		// System message will be null.
-		if ( $msg_id ) {
-			$post_content .= '<li id="' . $msg_id . '">';
+		if ( $event_id ) {
+			$post_content .= '<li id="' . $event_id . '">';
 		} else {
 			$post_content .= '<li>';
 		}
@@ -252,8 +251,8 @@ class Slack_Logbot {
 		// Replace URL to hyperlink URL.
 		$count = preg_match_all( '/\&lt;(?P<url>http.*?)\&gt;/', $ret_str, $match );
 		for ( $i = 0; $i < $count; $i++ ) {
-			$pattern = '{\&lt;' . $match['url'][ $i ] . '\&gt;}';
-			$ret_str = preg_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
+			$pattern = '&lt;' . $match['url'][ $i ] . '&gt;';
+			$ret_str = str_replace( $pattern, make_clickable( $match['url'][ $i ] ), $ret_str );
 		}
 
 		// Replace channel id / channel name to hyperlink URL.
@@ -264,6 +263,10 @@ class Slack_Logbot {
 			$link        = sprintf( '<a href="%s">#%s</a>', $channel_url, $match['channel_name'][ $i ] );
 			$ret_str     = preg_replace( $pattern, $link, $ret_str );
 		}
+
+		// Replace mention strings to @channel or @here.
+		$ret_str = str_replace( '&lt;!channel&gt;', '@channel', $ret_str );
+		$ret_str = str_replace( '&lt;!here&gt;', '@here', $ret_str );
 
 		return $ret_str;
 	}

@@ -7,7 +7,7 @@
  * Author URI:      https://4to.pics/
  * Text Domain:     wp-slack-logbot
  * Domain Path:     /languages
- * Version:         1.5
+ * Version:         1.6
  *
  * @package         Wp_Slack_Logbot
  */
@@ -43,7 +43,7 @@ class WP_Slack_Logbot {
 	 *
 	 * @var string $slack_logbot_version
 	 */
-	var $slack_logbot_version = '1.4';
+	var $slack_logbot_version = '1.6';
 
 	/**
 	 * WP_Slack_Logbot constructor.
@@ -66,6 +66,26 @@ class WP_Slack_Logbot {
 		load_plugin_textdomain( dirname( plugin_basename( __FILE__ ) ), false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		// uninstall hook.
 		register_uninstall_hook( __FILE__, 'WP_Slack_Logbot::uninstall' );
+
+		add_action( 'upgrader_process_complete', array( $this, 'upgrade' ), 9, 2 );
+	}
+
+	/**
+	 * Upgrade Plugin.
+	 *
+	 * @param string $object  object.
+	 * @param array  $options Options.
+	 */
+	public function upgrade( $object, $options ) {
+		$current_plugin = plugin_basename( __FILE__ );
+		if ( 'update' === $options['action'] && 'plugin' === $options['type'] ) {
+			foreach ( $options['plugins'] as $plugin ) {
+				if ( $plugin === $current_plugin ) {
+					$this->install();
+					break;
+				}
+			}
+		}
 	}
 
 	/**
@@ -82,6 +102,10 @@ class WP_Slack_Logbot {
 			// Unique key has been changed since version 1.4.
 			// Delete duplicated event_id rows except for min id.
 			$wpdb->query( "DELETE FROM {$wpdb->prefix}slack_logbot WHERE {$wpdb->prefix}slack_logbot.id NOT IN (SELECT * FROM (SELECT MIN(id) FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1) sl1) AND {$wpdb->prefix}slack_logbot.event_id IN (SELECT * FROM (SELECT event_id FROM {$wpdb->prefix}slack_logbot GROUP BY event_id HAVING COUNT(event_id) > 1) sl2)" );
+			// Drop index.
+			$wpdb->query( "ALTER TABLE {$wpdb->prefix}slack_logbot DROP INDEX message" );
+			// Add a new index.
+			$wpdb->query( "ALTER TABLE {$wpdb->prefix}slack_logbot ADD UNIQUE message(event_id)" );
 		}
 
 		$sql = "CREATE TABLE $table_name (
@@ -110,6 +134,7 @@ class WP_Slack_Logbot {
 		dbDelta( $sql );
 
 		update_option( 'slack_logbot_version', $this->slack_logbot_version );
+		remove_action( 'upgrader_process_complete', array( $this, 'install' ), 9 );
 	}
 
 	/**

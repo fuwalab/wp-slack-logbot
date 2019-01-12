@@ -67,7 +67,25 @@ class WP_Slack_Logbot {
 		// uninstall hook.
 		register_uninstall_hook( __FILE__, 'WP_Slack_Logbot::uninstall' );
 
-		add_action( 'upgrader_process_complete', array( $this, 'install' ), 9, 0 );
+		add_action( 'upgrader_process_complete', array( $this, 'upgrade' ), 9, 2 );
+	}
+
+	/**
+	 * Upgrade Plugin.
+	 *
+	 * @param string $object  object.
+	 * @param array  $options Options.
+	 */
+	public function upgrade( $object, $options ) {
+		$current_plugin = plugin_basename( __FILE__ );
+		if ( 'update' === $options['action'] && 'plugin' === $options['type'] ) {
+			foreach ( $options['plugins'] as $plugin ) {
+				if ( $plugin === $current_plugin ) {
+					$this->install();
+					break;
+				}
+			}
+		}
 	}
 
 	/**
